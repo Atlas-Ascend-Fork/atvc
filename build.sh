@@ -18,7 +18,7 @@ SUPPORTED_SHORT_OPTS="hj:vt-:"
 
 # 所有支持的长选项
 SUPPORTED_LONG_OPTS=(
-  "help" "verbose" "pkg" "make_clean" "cann_3rd_lib_path" "test" "noexec" "cov" "disable_asan" "cann_3rd_lib_path"
+  "help" "verbose" "pkg" "make_clean" "cann_3rd_lib_path" "test" "noexec" "cov" "disable_asan" "cann_3rd_lib_path" "build-type"
 )
 
 in_array() {
@@ -141,7 +141,7 @@ usage() {
     esac
   fi
 
-  echo "build script for atcos repository"
+  echo "build script for atvc repository"
   echo "Usage:"
   echo "    bash build.sh [-h] [-j[n]] [-v] [-t] [--pkg]"
   echo ""
@@ -162,6 +162,7 @@ usage() {
   echo "    The following are all supported arguments:"
   echo $dotted_line
   echo "    --make_clean                 Make clean"
+  echo "    --build-type=<TYPE>          Specify build type(TYPE options:Release/Debug), Default: Release"
   echo "    --noexec                     Only compile ut, do not execute the compiled executable file"
   echo "    --cov                        When building uTest locally, count the coverage"
   echo "    --disable_asan               Disable ASAN (Address Sanitizer)"
@@ -219,7 +220,7 @@ checkopts() {
   ENABLE_ASAN=TRUE
   ENABLE_PACKAGE=FALSE
   ENABLE_TEST=FALSE
-
+  BUILD_TYPE="Release"
   # 首先检查所有参数是否合法
   for arg in "$@"; do
     if [[ "$arg" =~ ^- ]]; then # 只检查以-开头的参数
@@ -276,6 +277,7 @@ checkopts() {
         pkg) ENABLE_PACKAGE=TRUE ;;
         cann_3rd_lib_path=*) CANN_3RD_LIB_PATH="$(realpath ${OPTARG#*=})" ;;
         disable_asan) ENABLE_ASAN=FALSE ;;
+        build-type=*) BUILD_TYPE="${OPTARG#*=}";;
         make_clean)
           clean_build
           clean_build_out
@@ -316,6 +318,7 @@ assemble_cmake_args() {
   CMAKE_ARGS="$CMAKE_ARGS -DENABLE_UT_EXEC=${ENABLE_UT_EXEC}"
   CMAKE_ARGS="$CMAKE_ARGS -DENABLE_COVERAGE=${ENABLE_COVERAGE}"
   CMAKE_ARGS="$CMAKE_ARGS -DCANN_3RD_LIB_PATH=${CANN_3RD_LIB_PATH}"
+  CMAKE_ARGS="$CMAKE_ARGS -DCMAKE_BUILD_TYPE=${BUILD_TYPE}"
 }
 
 clean_build() {
