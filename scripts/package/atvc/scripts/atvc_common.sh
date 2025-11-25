@@ -51,10 +51,10 @@ create_relatively_softlink() {
 }
 
 create_atvc_include_softlink() {
-  osName=""
+  os_name=""
   if [ -f "$1/atvc/scene.info" ]; then
     . $1/atvc/scene.info
-    osName=${os}
+    os_name=${os}
   fi
   atvc_include_src_path="$1/${architecture_dir}/asc/atvc/include"
 
@@ -75,7 +75,7 @@ create_atvc_include_softlink() {
 remove_relatively_softlink() {
   local path="$1"
   if [ -L "$1" ]; then
-    rm -fr ${path}
+    [ -n "${path}"] && rm -fr ${path}
     return 0
   else
     return 1
@@ -84,10 +84,10 @@ remove_relatively_softlink() {
 
 remove_atvc_include_softlink() {
   targetdir=$1
-  osName=""
+  os_name=""
   if [ -f "$targetdir/atvc/scene.info" ]; then
     . $targetdir/atvc/scene.info
-    osName=${os}
+    os_name=${os}
   fi
 
   if [ -d $targetdir/${architecture_dir}/ascendc/act ]; then

@@ -176,7 +176,7 @@ remove_module() {
   local remain_dir_list=$(find ${TARGET_MOULDE_DIR} -mindepth 1 -maxdepth 1 -type d)
   for remain_dir in ${remain_dir_list}; do
     if [ "$(find "${remain_dir}" -type f 2>&1)" = "" ]; then
-      rm -rf ${remain_dir}
+      [ -n "${remain_dir}"] && rm -rf ${remain_dir}
     fi
   done
 }

@@ -185,7 +185,7 @@ createsoftlink() {
   local dst_path="$2"
   if [ -e "$dst_path" ]; then
     if [ -L "$dst_path" ]; then
-      `rm -f $dst_path`
+      $(rm -f "$(dst_path)")
     else
       return 0
     fi
