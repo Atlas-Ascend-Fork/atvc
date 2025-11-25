@@ -536,7 +536,7 @@ do_del_package_softlink_in_latest() {
     fi
 
     get_package_dirpath "package_dirpath" "$package"
-    filelist_path="$install_path/$version_dir/$package_dirpath/filelist.csv"
+    filelist_path="$install_path/$version_dir/$package_dirpath/script/filelist.csv"
     install_info_path="$install_path/$version_dir/$package_dirpath/ascend_install.info"
 
     check_file_exists "${install_info_path}" "${install_info_path} doesn't exist in del package softlink in latest!"
