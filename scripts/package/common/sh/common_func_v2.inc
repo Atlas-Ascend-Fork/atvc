@@ -372,7 +372,7 @@ get_package_filelist() {
 
     get_package_dirpath "_package_dirpath" "${_package}"
 
-    eval "${_outvar}=\"${_install_path}/${_version_dir}/${_package_dirpath}/filelist.csv\""
+    eval "${_outvar}=\"${_install_path}/${_version_dir}/${_package_dirpath}/script/filelist.csv\""
 }
 
 # 获取包install_common_parser.sh路径
