@@ -84,7 +84,7 @@ else()
             -DCMAKE_INSTALL_PREFIX=${GTEST_INSTALL_PATH}
             -DCMAKE_INSTALL_LIBDIR=lib
             -DBUILD_SHARED_LIBS=OFF
-            TLS_VERIFY_OFF
+            TLS_VERIFY OFF
             <SOURCE_DIR>
             BUILD_COMMAND $(MAKE)
             INSTALL_COMMAND $(MAKE) install
