@@ -375,6 +375,7 @@ clean_build_out() {
 
 build_package() {
   echo "--------------- build package start ---------------"
+  echo `env`
   clean_build_out
 
   if [ ! -d "${BUILD_PATH}" ]; then
