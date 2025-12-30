@@ -76,31 +76,7 @@ ATVC支持源码编译，进行源码编译前，首先确保系统满足以下�
 git clone https://gitcode.com/cann/atvc.git
 ```
 
-## 编译安装
-
-1. 编译
-
-   ATVC仓提供一键式编译安装能力，进入本开源仓代码根目录，执行如下命令：
-
-   ```bash
-   bash build.sh --pkg
-   ```
-
-   编译完成后会在`build_out`目录下生成cann-atvc_\<cann_version\>_linux.\<arch\>.run软件包。
-
-2. 安装
-
-   在开源仓根目录下执行下列命令，根据设置的环境变量路径，将编译生成的run包安装到CANN包的装包路径，重复安装会覆盖原ATVC内容。
-
-   ```bash
-   # 设置CANN开发套件包环境变量，具体参考本文档环境变量设置示例章节，如已设置，则可忽略该操作
-   source ${install_path}/latest/bin/setenv.bash
-   # 切换到run包生成路径下
-   cd build_out
-   # 安装run包
-   ./cann-atvc_<cann_version>_linux.<arch>.run --full --quiet --install-path=${install_path}
-   ```
-   其中${install_path}详见[环境准备](#环境准备)章节说明
+用户可直接通过导入源码路径下的include路径中的对外头文件（include/atvc.h）使能模板库能力。在进行算子开发之前，可以通过如下UT测试和样例运行验证，确保当前环境是否正常。
 
 ## UT测试（可选）
 
