@@ -40,12 +40,13 @@ inline OpCompileInfo GetOpCompileInfo()
         {platform_ascendc::SocVersion::ASCEND910B, {48, 196352, 256, 32}},
         {platform_ascendc::SocVersion::ASCEND310B, {1, 262144, 256, 32}},
         {platform_ascendc::SocVersion::ASCEND310P, {8, 262144, 256, 32}},
+        {platform_ascendc::SocVersion::ASCEND950, {64, 262144, 256, 32}},
     };
 
     auto findRes = compileInfoMap.find(soc);
     if (findRes != compileInfoMap.cend()) {
         OpCompileInfo compileInfo = findRes->second;
-        if (soc == platform_ascendc::SocVersion::ASCEND910B) {
+        if (soc == platform_ascendc::SocVersion::ASCEND910B || soc == platform_ascendc::SocVersion::ASCEND950) {
             compileInfo.vectorCoreNum = platformInfoMgr->GetCoreNumAiv();
             uint64_t ubSize = compileInfo.ubSize;
             platformInfoMgr->GetCoreMemSize(platform_ascendc::CoreMemType::UB, ubSize);
