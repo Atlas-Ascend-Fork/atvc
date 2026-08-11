@@ -79,6 +79,21 @@ git clone https://gitcode.com/cann/atvc.git
 
 用户可直接通过导入源码路径下的include路径中的对外头文件（include/atvc.h）使能模板库能力。在进行算子开发之前，可以通过如下[UT测试](##UT测试（可选）)和[样例运行](##样例运行验证)验证，确保当前环境准备是否已完备。
 
+## 编译安装
+
+ATVC为头文件模板库，源码可直接通过include路径中的对外头文件（include/atvc.h）使用，无需额外编译安装。如需基于源码编译生成可部署的安装包，可在项目根目录执行以下命令：
+
+```bash
+bash build.sh --pkg
+```
+
+编译完成后，生成的可部署安装包位于`build_out`目录下，例如`cann-atvc_8.5.0_linux-x86_64.run`。安装包格式及安装方式与CANN软件包一致，执行安装包即可完成部署：
+
+```bash
+# 在安装包所在目录执行，${install_path}为指定安装路径，缺省时使用默认路径
+./cann-atvc_${version}_linux-${arch}.run --full --force --install-path=${install_path}
+```
+
 ## UT测试（可选）
 
 在开源仓根目录执行下列命令之一，将依次批跑tests目录下的用例，得到结果日志，用于看护编译是否正常。

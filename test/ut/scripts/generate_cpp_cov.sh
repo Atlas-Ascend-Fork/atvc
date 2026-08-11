@@ -68,9 +68,10 @@ generate_coverage() {
   if [[ ! -d "${_path_to_gen}" ]]; then
     mk_dir "${_path_to_gen}"
   fi
-  lcov -c -d "${_source_dir}" -o "${_coverage_file}"
-  lcov -r "${_coverage_file}" "/home/jenkins/Ascend/ascend-toolkit/cann/*" -o "${_coverage_file}"
-  lcov --extract "${_coverage_file}" -o "${_coverage_file}" "${_source_dir}/include/**/*.h"
+  local IGNORE_ERRORS="--ignore-errors inconsistent,mismatch,unused"
+  lcov -c -d "${_source_dir}" -o "${_coverage_file}" ${IGNORE_ERRORS}
+  lcov -r "${_coverage_file}" "/home/jenkins/Ascend/ascend-toolkit/cann/*" -o "${_coverage_file}" ${IGNORE_ERRORS}
+  lcov --extract "${_coverage_file}" -o "${_coverage_file}" "${_source_dir}/include/**/*.h" ${IGNORE_ERRORS}
   logging "generated coverage file ${_coverage_file}"
 }
 
@@ -90,7 +91,8 @@ filter_coverage() {
     exit 1
   fi
   lcov --remove "${_coverage_file}" '/usr/include/*' '/usr/local/include/*' \
-                                     -o "${_filtered_file}"
+                                     -o "${_filtered_file}" \
+                                     --ignore-errors inconsistent,mismatch,unused
 }
 
 # generate html report

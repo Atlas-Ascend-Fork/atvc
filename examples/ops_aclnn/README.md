@@ -32,27 +32,23 @@ ops_aclnn/
   ```
     CustomOp
     ├── build.sh                  // 编译入口脚本
-    ├── cmake 
-    │   ├── config.cmake
-    │   ├── util                  // 算子工程编译所需脚本及公共编译文件存放目录
     ├── CMakeLists.txt            // 算子工程的CMakeLists.txt
     ├── CMakePresets.json         // 编译配置项
     ├── framework                 // 算子插件实现文件目录，单算子模型文件的生成不依赖算子适配插件，无需关注
     ├── op_host                   // Host侧实现文件
-    │   ├── add_custom_tiling.h   // 算子tiling定义文件
     │   ├── add_custom.cpp        // 算子原型注册、shape推导、信息库、tiling实现等内容文件
     │   ├── CMakeLists.txt
     ├── op_kernel                 // Kernel侧实现文件
-    │   ├── CMakeLists.txt   
-    │   ├── add_custom.cpp        // 算子代码实现文件 
-    ├── scripts                   // 自定义算子工程打包相关脚本所在目录
+    │   ├── add_custom.cpp        // 算子代码实现文件
+    │   ├── add_custom_tiling.h   // 算子tiling定义文件
+    │   ├── CMakeLists.txt
   ```
 
 ### 步骤2. 修改对应文件内容
   
 - 2.1 复制需要的配置文件
 
-  将[func.cmake](./add/AddCustom/cmake/func.cmake)、[intf.cmake](./add/AddCustom/cmake/intf.cmake)、host侧的[CMakeLists.txt](./add/AddCustom/op_host/CMakeLists.txt)和kernel侧的[CMakeLists.txt](./add/AddCustom/op_kernel/CMakeLists.txt)分别复制到`步骤1`生成的工程文件的对应目录下。
+  将host侧的[CMakeLists.txt](./add/AddCustom/op_host/CMakeLists.txt)和kernel侧的[CMakeLists.txt](./add/AddCustom/op_kernel/CMakeLists.txt)分别复制到`步骤1`生成的工程文件的对应目录下，覆盖生成的CMakeLists.txt。这两个文件在msopgen生成的编译框架基础上，额外添加了对ATVC头文件路径（ATVC_PATH）的引用。
  
 - 2.2 修改对应的host文件
   - 引入对应的头文件，修改对应TilingFunc函数中tiling的生成，根据算子类型调用不同的tiling生成策略，更多ATVC的用法可参考ATVC的[开发指南](../../docs/02_developer_guide.md)。
