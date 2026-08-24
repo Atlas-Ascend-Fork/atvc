@@ -58,6 +58,7 @@ set(ATVC_TEST_ascend910b_CASE_SRC_FILES
 
 set(ATVC_TEST_ascend910b_TILING_CASE_SRC_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/tiling/test_atvc_tiling.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/tiling/test_pool_tiling.cpp
 )
 # 仅针对ATVC产品类型构建和运行测试
 foreach(product_type ${PRODUCT_TYPE_LIST})
