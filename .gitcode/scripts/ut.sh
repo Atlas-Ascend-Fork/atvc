@@ -90,7 +90,7 @@ source "${ASCEND_HOME_PATH}/bin/setenv.bash"
 cd "${WORKSPACE}" || exit
 
 set +e
-LOG_DO bash build.sh -t
+LOG_DO sh build.sh --utest --cann_3rd_lib_path="/home/jenkins/opensource"
 BUILD_EXIT_CODE=$?
 set -e
 DP_ASSERT_CHECK_SKIP "${BUILD_EXIT_CODE}" "Run UT TESTCASE"
