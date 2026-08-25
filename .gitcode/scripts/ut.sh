@@ -83,9 +83,9 @@ else
     export ASCEND_CUSTOM_PATH=/home/jenkins/Ascend/ascend-toolkit/latest
     export STABLE_LIBS_PATH=/home/jenkins/Ascend/ascend-toolkit/latest
 fi
-export ASCEND_INSTALL_PATH="/home/jenkins/Ascend/ascend-toolkit/latest"
+
 source "${ASCEND_HOME_PATH}/bin/setenv.bash"
-cat "${ASCEND_INSTALL_PATH}/compiler/version.info"
+# cat "${ASCEND_INSTALL_PATH}/compiler/version.info"
 
 cd "${WORKSPACE}" || exit
 
