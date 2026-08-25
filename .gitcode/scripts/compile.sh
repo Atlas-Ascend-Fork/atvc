@@ -84,15 +84,9 @@ cmake --version
 
 cd "${WORKSPACE}" || exit
 
-if [[ "${task_name}" =~ Compile_Ascend_X86_ubuntu24 ]]; then
-    sed -i "1i set(CMAKE_EXPORT_COMPILE_COMMANDS ON)" "CMakeLists.txt"
-    echo "api-check=compile" >> "${ATOMGIT_OUTPUT}"
-else
-    echo "api-check=continue" >> "${ATOMGIT_OUTPUT}"
-fi
 
 set +e
-LOG_DO bash build.sh
+LOG_DO bash build.sh --pkg --cann_3rd_lib_path="/home/jenkins/opensource"
 BUILD_EXIT_CODE=$?
 set -e
 DP_ASSERT_CHECK_SKIP "${BUILD_EXIT_CODE}" "bash build.sh"
