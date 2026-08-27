@@ -18,6 +18,8 @@ ops_pytorch/
 
 ## 开发步骤
 
+<a name="codeready"></a>
+
   不同的算子类型可参考[快速入门](../../docs/01_quick_start.md)中的模版选择模版进行选择，用户在此处通过`<<<>>>`的方式调用核函数，更多ATVC的用法可参考ATVC的[开发指南](../../docs/02_developer_guide.md)。
   
 ### 步骤1. 引入头文件。需要注意的是，需要保护对应核函数调用接口声明所在的头文件{kernel_name}_impl.h,kernel_name为算子的核函数名称。
