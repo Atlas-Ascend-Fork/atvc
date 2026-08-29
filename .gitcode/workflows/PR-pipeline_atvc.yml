@@ -1,7 +1,7 @@
 name: PR-pipeline_atvc
 
 concurrency:
-  max: 5
+  max: 15
   exceed-action: IGNORE
   enable: false
   preemption:
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
   pull_request_comment:
     types: [created]
-    branches: [ '*' ]
+    branches: [ '**' ]
     comments: [ '^(?:\/)?compile*' ]
   pr_comment:
     types: [ created ]
@@ -57,7 +57,7 @@ stages:
     - type: auto
     fail-fast: true
   stage2:
-    name: compile
+    name: Compile
     jobs:
       JOB_x86_compile:
         name: Compile_x86
@@ -77,7 +77,6 @@ stages:
           package_name: 'cann-atvc_linux-aarch64.run'
       JOB_x86_compile_ubuntu24:
         name: Compile_x86_ubuntu24
-        needs: []
         uses: .gitcode/workflows/compile_action.yml
         with:
           task_name: 'Compile_Ascend_X86_ubuntu24'
@@ -100,7 +99,7 @@ stages:
     - type: auto
     fail-fast: false
   stage3:
-    name: ut
+    name: UT
     jobs:
       JOB_ut:
         name: UT_atvc
