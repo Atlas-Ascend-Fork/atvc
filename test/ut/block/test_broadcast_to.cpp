@@ -54,6 +54,13 @@ TEST_F(AtvcBroadcastToTestsuite, AtvcBroadcastToTestCase)
     uint32_t outEleNum = 64U;
     uint32_t aGm[eleNum] = {0};
     uint32_t bGm[outEleNum] = {0};
+    uint32_t expectResult[outEleNum] = {};
+    for (uint32_t i = 0; i < eleNum; i++) {
+        aGm[i] = i; // 初始化输入数据
+    }
+    for (uint32_t i = 0; i < outEleNum; i++) {
+        expectResult[i] = i % eleNum; // 期望输出数据：[1,8] 广播到 [8,8]
+    }
 
     BroadcastParam *param = new BroadcastParam{};
     param->nBufferNum = 2U;
@@ -79,8 +86,8 @@ TEST_F(AtvcBroadcastToTestsuite, AtvcBroadcastToTestCase)
     param->tilingData.dstStride[0] = 64U;
     param->tilingData.dstStride[1] = 8U;
     TestBroadcastCustom(aGm, bGm, *param);
-    for (int i = 0; i < outEleNum; i++) {
-        EXPECT_EQ(bGm[0], 0);
+    for (uint32_t i = 0; i < outEleNum; i++) {
+        EXPECT_EQ(bGm[i], expectResult[i]);
     }
     delete param;
 }
