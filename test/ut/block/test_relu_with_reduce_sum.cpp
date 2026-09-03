@@ -15,18 +15,20 @@
 #include "common/kernel_utils.h"
 #include "reduce/kernel/reduce_op_template.h"
 #include "reduce/common/reduce_common.h"
-#include "reduce/kernel/reduce_sum.h"
+#include "reduce/kernel/reduce_sum_compute.h"
 #include "relu_with_reduce_sum/relu_with_reduce_sum.h"
 
 namespace ATVC {
 using ReduceOpTraits = OpTraits<OpInputs<float>, OpOutputs<float>, OpTemps<float>>;
 
-void TestReluWithReduceSumCustom(GM_ADDR x, GM_ADDR y, ReduceParam* reduceParam)
+void TestReluWithReduceSumCustom(float *x, float *y, ReduceParam *reduceParam)
 {
-    ReluWithReduceSum<ReduceOpTraits, ATVC::REDUCE_POLICY1>(reinterpret_cast<uint8_t *>(x), reinterpret_cast<uint8_t *>(y), reduceParam);
+    // 与 test_reduce_sum 相同的 [1,2] 形状/参数组合，使用其已被验证的 REDUCE_POLICY2
+    ReluWithReduceSum<ReduceOpTraits, ATVC::REDUCE_POLICY2>(reinterpret_cast<uint8_t *>(x),
+        reinterpret_cast<uint8_t *>(y), *reduceParam);
 }
 
-class AtvcReduceSumTestsuite : public testing::Test {
+class AtvcReluWithReduceSumTestsuite : public testing::Test {
 protected:
     void SetUp()
     {
@@ -39,11 +41,16 @@ protected:
     }
 };
 
-TEST_F(AtvcReduceSumTestsuite, AtvcReduceSumTestCase)
+TEST_F(AtvcReluWithReduceSumTestsuite, AtvcReluWithReduceSumTestCase)
 {
-    uint32_t eleNum = 2U;
-    uint32_t aGm[eleNum] = {0};
-    uint32_t bGm[1] = {0};
+    constexpr uint32_t eleNum = 2U;
+    // 输入含负值以覆盖 relu 截断分支：{-1, 2} + 1 = {0, 3}，求和 3.0，relu(3.0) = 3.0
+    constexpr float inputVal0 = -1.0F;
+    constexpr float inputVal1 = 2.0F;
+    constexpr float reluExpected = 3.0F;
+    float aGm[eleNum] = {inputVal0, inputVal1};
+    float bGm[1] = {};
+    float expectResult[1] = {reluExpected};
 
     ReduceParam *param = new ReduceParam{};
     param->tilingData.factorACntPerCore = 1;
@@ -61,7 +68,9 @@ TEST_F(AtvcReduceSumTestsuite, AtvcReduceSumTestCase)
     param->tilingData.stride[0] = 2U;
     param->tilingData.stride[1] = 1;
 
+    TestReluWithReduceSumCustom(aGm, bGm, param);
+    EXPECT_FLOAT_EQ(bGm[0], expectResult[0]);
     delete param;
-    AscendC::printf("AddWithBroadcastTestCase passed.\n");
+    AscendC::printf("ReluWithReduceSumTestCase passed.\n");
 }
 }  // namespace ATVC

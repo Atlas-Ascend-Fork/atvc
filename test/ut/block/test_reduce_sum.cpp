@@ -28,10 +28,10 @@ __global__ __aicore__ void ReduceSumCustom(GM_ADDR x, GM_ADDR y, ReduceParam* re
     op.Run(x, y, reduceParam);
 }
 
-void TestReduceSumCustom(uint32_t *x, uint32_t *y, ReduceParam *param)
+void TestReduceSumCustom(float *x, float *y, ReduceParam *param)
 {
     ReduceSumCustom<ReduceOpTraits, REDUCE_POLICY2>(
-        reinterpret_cast<uint8_t *>(x), reinterpret_cast<uint8_t *>(x), param);
+        reinterpret_cast<uint8_t *>(x), reinterpret_cast<uint8_t *>(y), param);
 }
 
 class AtvcReduceSumTestsuite : public testing::Test {
@@ -49,9 +49,14 @@ protected:
 
 TEST_F(AtvcReduceSumTestsuite, AtvcReduceSumTestCase)
 {
-    uint32_t eleNum = 2U;
-    uint32_t aGm[eleNum] = {0};
-    uint32_t bGm[1] = {0};
+    constexpr uint32_t eleNum = 2U;
+    float aGm[eleNum] = {};
+    float bGm[1] = {};
+    float expectResult[1] = {};
+    for (uint32_t i = 0; i < eleNum; i++) {
+        aGm[i] = static_cast<float>(i + 1);
+    }
+    expectResult[0] = aGm[0] + aGm[1];
 
     ReduceParam *param = new ReduceParam{};
     param->tilingData.factorACntPerCore = 1;
@@ -69,6 +74,7 @@ TEST_F(AtvcReduceSumTestsuite, AtvcReduceSumTestCase)
     param->tilingData.stride[0] = 2U;
     param->tilingData.stride[1] = 1;
     TestReduceSumCustom(aGm, bGm, param);
-    EXPECT_EQ(bGm[0], 0);
+    EXPECT_FLOAT_EQ(bGm[0], expectResult[0]);
+    delete param;
 }
 }  // namespace ATVC

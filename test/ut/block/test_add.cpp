@@ -36,7 +36,7 @@ __global__ __aicore__ void AddCustom(GM_ADDR a, GM_ADDR b, GM_ADDR c, EleWisePar
     op.Run(a, b, c, param);
 }
 
-void TestAddCustom(uint32_t *a, uint32_t *b, uint32_t *c, EleWiseParam *param)
+void TestAddCustom(float *a, float *b, float *c, EleWiseParam *param)
 {
     AddCustom<ADD_OPTRAITS>(reinterpret_cast<uint8_t *>(a),
         reinterpret_cast<uint8_t *>(b),
@@ -59,10 +59,16 @@ protected:
 
 TEST_F(AtvcAddTestsuite, AtvcAddTestCase)
 {
-    uint32_t eleNum = 4U;
-    uint32_t aGm[eleNum] = {0};
-    uint32_t bGm[eleNum] = {0};
-    uint32_t cGm[eleNum] = {0};
+    constexpr uint32_t eleNum = 4U;
+    float aGm[eleNum] = {};
+    float bGm[eleNum] = {};
+    float cGm[eleNum] = {};
+    float expectResult[eleNum] = {};
+    for (uint32_t i = 0; i < eleNum; i++) {
+        aGm[i] = static_cast<float>(i);
+        bGm[i] = static_cast<float>(eleNum - i);
+        expectResult[i] = aGm[i] + bGm[i];
+    }
 
     EleWiseParam *param = new EleWiseParam{};
     param->nBufferNum = 2U;
@@ -74,8 +80,9 @@ TEST_F(AtvcAddTestsuite, AtvcAddTestCase)
     param->totalCnt = 4U;
 
     TestAddCustom(aGm, bGm, cGm, param);
-    for (int i = 0; i < eleNum; i++) {
-        EXPECT_EQ(cGm[0], 0);
+    for (uint32_t i = 0; i < eleNum; i++) {
+        EXPECT_FLOAT_EQ(cGm[i], expectResult[i]);
     }
+    delete param;
 }
 }  // namespace ATVC
