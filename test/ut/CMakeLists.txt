@@ -33,6 +33,7 @@ set(ATVC_TEST_HEADER_FILES
         ${UT_PATH}/common
         ${ATVC_DIR}
         ${ATVC_DIR}/include
+        ${ATVC_DIR}/examples
         ${GTEST_INCLUDE}
         ${C_SEC_INCLUDE}
         ${ASCENDC_SYS_DIR}/asc/
@@ -54,6 +55,7 @@ set(ATVC_TEST_ascend910b_CASE_SRC_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_reduce_sum.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_add_with_broadcast.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_addcmul.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/block/test_relu_with_reduce_sum.cpp
 )
 
 set(ATVC_TEST_ascend910b_TILING_CASE_SRC_FILES
