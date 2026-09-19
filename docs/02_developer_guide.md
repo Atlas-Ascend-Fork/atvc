@@ -1144,7 +1144,7 @@ ATVC框架支持Broadcast与Elementwise组合的算子通过扩展BroadcastOpTem
 下面将以Add算子（Broadcast + Elementwise, 为区别Add单算字，命名为AddWithBroadcast算子）搭建为样例，按照组装顺序介绍组合算子类的开发流程。
 
 ### 3.4.2 组合算子开发步骤
-下面是用户利用Components模板实现自定义算子所需要实现的关键步骤，完整样例见[add_with_broadcast](..\examples\add_with_broadcast\add_with_broadcast.cpp) :
+下面是用户利用Components模板实现自定义算子所需要实现的关键步骤，完整样例见[add_with_broadcast](../examples/add_with_broadcast/add_with_broadcast.cpp) :
 ```cpp
 // AddWithBroadcast算子的描述：两个输入，一个输出，类型均为float
 using BroadcastOpTraits = ATVC::OpTraits<ATVC::OpInputs<float, float>, ATVC::OpOutputs<float>, ATVC::OpTemps<float>>;
