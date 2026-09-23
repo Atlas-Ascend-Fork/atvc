@@ -19,6 +19,7 @@ from itertools import chain
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
 
 from .utils.comm_log import CommLog
+from .utils.pkg_utils import CompressError
 
 
 class PackageName:
