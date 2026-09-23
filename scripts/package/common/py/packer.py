@@ -13,6 +13,7 @@
 import os
 import shutil
 import subprocess
+from subprocess import PIPE, STDOUT
 from argparse import Namespace
 from itertools import chain
 from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
