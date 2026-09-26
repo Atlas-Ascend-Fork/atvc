@@ -382,7 +382,7 @@ elewiseTemplate.Run(x, y, &param);
 - 计算达到UB上限的单核单输入元素个数值`ubLimitCnt`：UB上限内存大小 / 所有输入输出及temp单个元素的内存之和。
 - 计算`tiledCnt`：
     - 计算每个核需要处理的数据元素量`avgElePerBlock = totalCnt / blockNum`。
-    - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = dataSplitFactor / dataSplitFactor`。
+    - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = avgElePerBlock / dataSplitFactor[i]`。
     - `tiledCnt`调整： 不超上限`ubLimitCnt`， 不小于下限32，且最后的`tiledCnt`要做32元素对齐。
 - 计算`tailBlockCnt`：总的基本块数量（`totalCopyCnt`）% block块的数量，即为剩余需要处理的尾块的数量。
 - 计算`numPerBlock`：计算每一个block需要处理多少个基本块，即`numPerBlock = totalCopyCnt / blockNum`。
@@ -1944,7 +1944,7 @@ TanhGrad<AddOpTraits><<<blockNum, nullptr, stream>>>(dyDevice, yDevice, zDevice,
 - 计算达到UB上限的单核单输入元素个数值`ubLimitCnt`：UB上限内存大小 / 所有输入输出及temp单个元素的内存之和。
 - 计算`tiledCnt`：
     - 计算每个核需要处理的数据元素量`avgElePerBlock = totalCnt / blockNum`。
-    - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = dataSplitFactor / dataSplitFactor`。
+    - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = avgElePerBlock / dataSplitFactor[i]`。
     - `tiledCnt`调整： 不超上限`ubLimitCnt`， 不小于下限32，且最后的`tiledCnt`要做32元素对齐。
 #### 4.3.1.2 Elementwise TilingData定义
 Elementwise模板通用Tiling切分的数据结构为EleWiseTilingData，描述了核间切分和单核内切分的策略，其定义如下：
