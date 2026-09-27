@@ -54,6 +54,7 @@ set(ATVC_TEST_ascend910b_CASE_SRC_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_reduce_sum.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_add_with_broadcast.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_addcmul.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/block/test_pool.cpp
 )
 
 set(ATVC_TEST_ascend910b_TILING_CASE_SRC_FILES
