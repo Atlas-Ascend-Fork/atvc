@@ -34,6 +34,12 @@ void TestReduceSumCustom(uint32_t *x, uint32_t *y, ReduceParam *param)
         reinterpret_cast<uint8_t *>(x), reinterpret_cast<uint8_t *>(x), param);
 }
 
+void TestNoReduceCopy(float *x, float *y, ReduceParam *param)
+{
+    ReduceSumCustom<ReduceOpTraits, REDUCE_POLICY0>(
+        reinterpret_cast<uint8_t *>(x), reinterpret_cast<uint8_t *>(y), param);
+}
+
 class AtvcReduceSumTestsuite : public testing::Test {
 protected:
     void SetUp()
@@ -70,5 +76,49 @@ TEST_F(AtvcReduceSumTestsuite, AtvcReduceSumTestCase)
     param->tilingData.stride[1] = 1;
     TestReduceSumCustom(aGm, bGm, param);
     EXPECT_EQ(bGm[0], 0);
+}
+
+TEST_F(AtvcReduceSumTestsuite, NoReduceCopyDoesNotTouchElementsPastOutput)
+{
+    constexpr float kCanary = -1234.0F;
+    std::vector<float> input(16, 99.0F);
+    std::vector<float> output(16, kCanary);
+    input[0] = 5.25F;
+
+    ReduceParam param{};
+    param.tilingData.basicBlock = 49152U;
+    param.tilingData.coreNum = 1;
+    param.tilingData.shape[0] = 1;
+
+    TestNoReduceCopy(input.data(), output.data(), &param);
+
+    EXPECT_FLOAT_EQ(output[0], input[0]);
+    for (size_t i = 1; i < 8; ++i) {
+        EXPECT_FLOAT_EQ(output[i], kCanary);
+    }
+}
+
+TEST_F(AtvcReduceSumTestsuite, NoReduceCopyAlignedControl)
+{
+    constexpr float kCanary = -1234.0F;
+    std::vector<float> input(16, 99.0F);
+    std::vector<float> output(16, kCanary);
+    for (size_t i = 0; i < 8; ++i) {
+        input[i] = static_cast<float>(i + 1);
+    }
+
+    ReduceParam param{};
+    param.tilingData.basicBlock = 49152U;
+    param.tilingData.coreNum = 1;
+    param.tilingData.shape[0] = 8;
+
+    TestNoReduceCopy(input.data(), output.data(), &param);
+
+    for (size_t i = 0; i < 8; ++i) {
+        EXPECT_FLOAT_EQ(output[i], input[i]);
+    }
+    for (size_t i = 8; i < 16; ++i) {
+        EXPECT_FLOAT_EQ(output[i], kCanary);
+    }
 }
 }  // namespace ATVC

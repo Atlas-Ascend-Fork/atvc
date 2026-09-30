@@ -121,6 +121,23 @@ TEST_F(TestAtvcTiling, TestAtvcTilingReduceSumCase)
     EXPECT_EQ(ret, true);
 }
 
+TEST_F(TestAtvcTiling, TestAtvcTilingReduceNoAxesCase)
+{
+    using ReduceOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>>;
+    ATVC::ReduceParam param{};
+    ATVC::ReducePolicy policy{-1, -1, -1};
+    const std::vector<int64_t> shape{1};
+    const std::vector<int64_t> axes{};
+
+    const bool ret = ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shape, axes, &policy, &param);
+
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(policy == ATVC::REDUCE_POLICY0);
+    EXPECT_EQ(param.tilingData.outSize, 1U);
+    EXPECT_EQ(param.tilingData.coreNum, 1);
+    EXPECT_EQ(param.tilingData.shape[0], 1U);
+}
+
 TEST_F(TestAtvcTiling, TestAtvcTilingReduceSumHyperParamError)
 {
     using ReduceOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>>;

@@ -310,7 +310,6 @@ public:
             }
             shapeSize = shapeSize * this->param_->tilingData.shape[i];
         }
-        shapeSize = (shapeSize * sizeof(DataType) + UB_ALIGN_31) / UB_ALIGN_32 * UB_ALIGN_32 / sizeof(DataType);
         AscendC::LocalTensor<DataType> tmpLoc;
         AllocTensorAux<true, false>(tmpLoc);
         uint32_t locSize = tmpLoc.GetSize();
@@ -326,11 +325,14 @@ public:
             AscendC::WaitFlag<AscendC::HardEvent::MTE3_MTE2>(copyId);
         }
         if (tailCnt > 0) {
-            AscendC::DataCopy(tmpLoc, input_[0][loopCnt], tailCnt);
+            AscendC::DataCopyExtParams copyInParams{1, tailCnt * sizeof(DataType), 0, 0, 0};
+            AscendC::DataCopyPadExtParams<DataType> padParams{false, 0, 0, 0};
+            AscendC::DataCopyPad(tmpLoc, input_[0][loopCnt], copyInParams, padParams);
             event_t copyId = static_cast<event_t>(GetTPipePtr()->FetchEventID<AscendC::HardEvent::MTE2_MTE3>());
             AscendC::SetFlag<AscendC::HardEvent::MTE2_MTE3>(copyId);
             AscendC::WaitFlag<AscendC::HardEvent::MTE2_MTE3>(copyId);
-            AscendC::DataCopy(output_[0][loopCnt], tmpLoc, tailCnt);
+            AscendC::DataCopyExtParams copyOutParams{1, tailCnt * sizeof(DataType), 0, 0, 0};
+            AscendC::DataCopyPad(output_[0][loopCnt], tmpLoc, copyOutParams);
         }
     }
 
