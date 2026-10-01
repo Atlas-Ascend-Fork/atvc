@@ -49,7 +49,7 @@ struct ReduceTilingInputParam {
     {}
 };
 
-void MakeWrapDim(const std::vector<int64_t> &shape, std::vector<int64_t> &axes)
+inline void MakeWrapDim(const std::vector<int64_t> &shape, std::vector<int64_t> &axes)
 {
     // EnsureNotScalar at least return 1-D Tensor, so shapeSize cannot be 0
     size_t shapeSize = shape.size();
@@ -70,7 +70,7 @@ bool IsAxisA(int32_t idx)
     }
 }
 
-int32_t IsAxesValid(const std::vector<int64_t> &shape, const std::vector<int64_t> &axes)
+inline int32_t IsAxesValid(const std::vector<int64_t> &shape, const std::vector<int64_t> &axes)
 {
     size_t shapeSize = shape.size();
     size_t axesSize = axes.size();
