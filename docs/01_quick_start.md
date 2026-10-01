@@ -92,10 +92,10 @@ bash build.sh --pkg
 执行生成的安装包，完成安装：
 
 ```bash
-# 确保安装包具有可执行权限
-chmod +x cann-atvc_${version}_linux-${arch}.run
+# 确保 build_out 中的安装包具有可执行权限
+chmod +x build_out/cann-atvc_${version}_linux-${arch}.run
 # 安装命令
-./cann-atvc_${version}_linux-${arch}.run --full --quiet --install-path=${install_path}
+./build_out/cann-atvc_${version}_linux-${arch}.run --full --quiet --install-path=${install_path}
 ```
 
 - \$\{version\}：表示安装包版本号，如8.5.0。
