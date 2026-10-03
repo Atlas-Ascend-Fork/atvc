@@ -99,4 +99,4 @@ TEST_F(AtvcPoolTestsuite, OutputStrideExceedsDataCopyParams)
 }
 
 }  // namespace
-} // namespace ATVC
+}  // namespace ATVC
