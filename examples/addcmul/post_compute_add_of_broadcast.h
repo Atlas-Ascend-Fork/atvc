@@ -47,7 +47,7 @@ struct PostComputeAddOfBroadcast {
     */
     template<typename DataType>
     __aicore__ inline void operator()(AscendC::LocalTensor<DataType> y, AscendC::LocalTensor<DataType> z, AscendC::LocalTensor<DataType> x,
-        uint32_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams)
+        uint64_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams)
     {
         size_t size = copyOutParams.blockCount * (copyOutParams.blockLen + copyOutParams.srcStride * 32)/ sizeof(DataType);
         ATVC::SyncDataQueue<AscendC::HardEvent::MTE3_MTE2>();
@@ -72,7 +72,7 @@ private:
     }
 
     template<typename DataType>
-    __aicore__ inline void CopyIn(AscendC::LocalTensor<DataType> y, uint32_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams)
+    __aicore__ inline void CopyIn(AscendC::LocalTensor<DataType> y, uint64_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams)
     {
         AscendC::DataCopyPadExtParams<DataType> padParams{false, 0, 0, 0};
         uint32_t tmp = copyOutParams.srcStride;
@@ -85,13 +85,13 @@ private:
 
     template<typename DataType>
     __aicore__ inline void Compute(AscendC::LocalTensor<DataType> y, AscendC::LocalTensor<DataType> z, AscendC::LocalTensor<DataType> x,
-        uint32_t copyOutOffset, uint32_t size)
+        uint64_t copyOutOffset, uint32_t size)
     {
         AscendC::Add(z, x, y, size);     
     }
 
     template<typename DataType>
-    __aicore__ inline void CopyOut(AscendC::LocalTensor<DataType> z, uint32_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams)
+    __aicore__ inline void CopyOut(AscendC::LocalTensor<DataType> z, uint64_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams)
     {
         AscendC::DataCopyPad(dstGlobal_[copyOutOffset], z, copyOutParams);
     }
