@@ -131,7 +131,7 @@ public:
     template <typename T>
     __aicore__ inline uint32_t GetOutputTensorIdx(AscendC::LocalTensor<T> &tensor)
     {
-        uint64_t start = (uint64_t)qQue_.GetWithOffset<T>(outputNum_, inputNum_).GetPhyAddr();
+        uint64_t start = (uint64_t)qQue_.GetWithOffset<T>(outputNum_, computeUnit_.offset).GetPhyAddr();
         uint64_t offset = (uint64_t)tensor.GetPhyAddr();
         uint32_t idx = (offset - start) / sizeof(T) / outputNum_;
         return idx;

@@ -25,7 +25,7 @@ namespace Host {
  * \param[in] hyperParam, reduce tiling hyper param
  * \return bool result, return true if the hyper param is valid, otherwise return false.
  */
-bool CheckReduceHyperParam(const ATVC::Host::ReduceTilingHyperParam &hyperParam)
+inline bool CheckReduceHyperParam(const ATVC::Host::ReduceTilingHyperParam &hyperParam)
 {
     constexpr uint32_t MAX_BASE_LINE = 54 * 1024U;
     constexpr uint32_t MIN_BASE_LINE = 48 * 1024U;

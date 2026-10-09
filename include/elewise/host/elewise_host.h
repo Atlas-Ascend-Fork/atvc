@@ -42,7 +42,7 @@ struct EleWiseTilingHyperParam {
  * \param[in] hyperParam, elementwise tiling hyper param
  * \return bool result, return true if the hyper param is valid, otherwise return false
  */
-bool CheckEleWiseHyperParam(const EleWiseTilingHyperParam &hyperParam)
+inline bool CheckEleWiseHyperParam(const EleWiseTilingHyperParam &hyperParam)
 {
     constexpr uint32_t MAX_BASE_LINE = 128 *1024U;
     constexpr uint32_t MIN_BASE_LINE = 256U;
@@ -98,7 +98,7 @@ bool CheckEleWiseHyperParam(const EleWiseTilingHyperParam &hyperParam)
  * \param[in] ubufLimitCnt, ub upper constraints
  * \return int32_t the base element count per block
  */
-int32_t GetEleWiseBasicCnt(
+inline int32_t GetEleWiseBasicCnt(
     const EleWiseTilingHyperParam &hyperParam, int32_t totalCnt, uint32_t blockNum, uint32_t ubufLimitCnt)
 {
     uint32_t basicCnt = 0;
