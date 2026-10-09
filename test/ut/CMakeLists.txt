@@ -54,6 +54,7 @@ set(ATVC_TEST_ascend910b_CASE_SRC_FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_reduce_sum.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_add_with_broadcast.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/block/test_addcmul.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/block/test_pool.cpp
 )
 
 set(ATVC_TEST_ascend910b_TILING_CASE_SRC_FILES
@@ -140,16 +141,19 @@ foreach(product_type ${PRODUCT_TYPE_LIST})
                     TARGET atvc_${product_type}_ut POST_BUILD
                     COMMAND
                     COMMAND bash -c "source ${ASCEND_DIR}/set_env.sh && \
-        ${PRELOAD} ASAN_OPTIONS=detect_leaks=0 ./atvc_${product_type}_ut"
+        ${PRELOAD} ASAN_OPTIONS=detect_leaks=0 ./atvc_${product_type}_ut '--gtest_filter=AtvcPoolTestsuite.*' && \
+        ${PRELOAD} ASAN_OPTIONS=detect_leaks=0 ./atvc_${product_type}_ut '--gtest_filter=-AtvcPoolTestsuite.*'"
                     VERBATIM
-                    COMMENT "Run atvc utest with asan"
+                    COMMENT "Run atvc Pool regressions and remaining utest with asan"
             )
         else()
             add_custom_command(
                     TARGET atvc_${product_type}_ut POST_BUILD
-                    COMMAND bash -c "source ${ASCEND_DIR}/set_env.sh && ./atvc_${product_type}_ut"
+                    COMMAND bash -c "source ${ASCEND_DIR}/set_env.sh && \
+        ./atvc_${product_type}_ut '--gtest_filter=AtvcPoolTestsuite.*' && \
+        ./atvc_${product_type}_ut '--gtest_filter=-AtvcPoolTestsuite.*'"
                     VERBATIM
-                    COMMENT "Run atvc utest"
+                    COMMENT "Run atvc Pool regressions and remaining utest"
             )
         endif()
 
