@@ -29,7 +29,7 @@ __global__ __aicore__ void BroadcastCustom(GM_ADDR x, GM_ADDR y, BroadcastParam 
     op.Run(x, y, param);
 }
 
-void TestBroadcastCustom(uint32_t *x, uint32_t *y, BroadcastParam &param)
+void TestBroadcastCustom(float *x, float *y, BroadcastParam &param)
 {
     BroadcastCustom<BroadcastOpTraits, BROADCAST_POLICY1>(
         reinterpret_cast<uint8_t *>(x), reinterpret_cast<uint8_t *>(y), param);
@@ -52,8 +52,8 @@ TEST_F(AtvcBroadcastToTestsuite, AtvcBroadcastToTestCase)
 {
     uint32_t eleNum = 8U;
     uint32_t outEleNum = 64U;
-    uint32_t aGm[eleNum] = {0};
-    uint32_t bGm[outEleNum] = {0};
+    float aGm[eleNum] = {0};
+    float bGm[outEleNum] = {0};
 
     BroadcastParam *param = new BroadcastParam{};
     param->nBufferNum = 2U;
@@ -80,7 +80,14 @@ TEST_F(AtvcBroadcastToTestsuite, AtvcBroadcastToTestCase)
     param->tilingData.dstStride[1] = 8U;
     TestBroadcastCustom(aGm, bGm, *param);
     for (int i = 0; i < outEleNum; i++) {
-        EXPECT_EQ(bGm[0], 0);
+        EXPECT_FLOAT_EQ(bGm[i], 0.0F);
+    }
+    for (uint32_t i = 0; i < eleNum; ++i) {
+        aGm[i] = static_cast<float>(i + 1);
+    }
+    TestBroadcastCustom(aGm, bGm, *param);
+    for (uint32_t i = 0; i < outEleNum; ++i) {
+        EXPECT_FLOAT_EQ(bGm[i], aGm[i % eleNum]);
     }
     delete param;
 }
