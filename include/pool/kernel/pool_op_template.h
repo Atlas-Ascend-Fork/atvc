@@ -146,12 +146,10 @@ private:
         curTileScope_.offset.left = curOffset_.left;  // need to be 32B byte aligned
         curTileScope_.offset.up = curOffset_.up;
         // 1.1 layout for cur tile scope
-        curTileScope_.layout.width = curTileScope_.offset.left + TILE_LAYOUT.width > totalLayout.width
-                                         ? totalLayout.width - curTileScope_.offset.left
-                                         : TILE_LAYOUT.width;
-        curTileScope_.layout.height = curTileScope_.offset.up + TILE_LAYOUT.height > totalLayout.height
-                                          ? totalLayout.height - curTileScope_.offset.up
-                                          : TILE_LAYOUT.height;
+        curTileScope_.layout.width =
+            ATVC::Kernel::GetPoolTileExtent(curTileScope_.offset.left, totalLayout.width, TILE_LAYOUT.width);
+        curTileScope_.layout.height =
+            ATVC::Kernel::GetPoolTileExtent(curTileScope_.offset.up, totalLayout.height, TILE_LAYOUT.height);
 
         // 1.2 padding for cur tile scope
         curTileScope_.tilePadding.up =
@@ -160,11 +158,11 @@ private:
             curTileScope_.offset.left >= TILE_PADDING.left ? TILE_PADDING.left : curTileScope_.offset.left;
 
         uint32_t totalUsed = curTileScope_.offset.left + curTileScope_.layout.width;
-        curTileScope_.tilePadding.right =
-            totalUsed + TILE_PADDING.right > totalLayout.width ? (totalLayout.width - totalUsed) : TILE_PADDING.right;
+        uint32_t remainingWidth = totalUsed < totalLayout.width ? totalLayout.width - totalUsed : 0;
+        curTileScope_.tilePadding.right = TILE_PADDING.right < remainingWidth ? TILE_PADDING.right : remainingWidth;
         totalUsed = curTileScope_.offset.up + curTileScope_.layout.height;
-        curTileScope_.tilePadding.down =
-            totalUsed + TILE_PADDING.down > totalLayout.height ? (totalLayout.height - totalUsed) : TILE_PADDING.down;
+        uint32_t remainingHeight = totalUsed < totalLayout.height ? totalLayout.height - totalUsed : 0;
+        curTileScope_.tilePadding.down = TILE_PADDING.down < remainingHeight ? TILE_PADDING.down : remainingHeight;
 
         ATVC::Kernel::DebugPrintf(
             "[INFO]:[ATVC][Pool]Curent offset.up: %u .left: %u  padding: up: %u left: %u right: %u down: %u\n",
