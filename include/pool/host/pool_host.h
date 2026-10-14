@@ -18,6 +18,7 @@
 #include <vector>
 #include <cstdint>
 #include <cmath>
+#include <limits>
 #include "common/compile_info.h"
 #include "common/atvc_opdef.h"
 #include "common/atvc_op_check.h"
@@ -110,7 +111,18 @@ bool CalcPoolTiling(const ATVC::Layout2Dim &totalLayout, const ATVC::Layout2Dim 
     uint32_t totalCnt = totalH * totalW;
     auto compileInfo = ATVC::GetOpCompileInfo();
     uint32_t ubSize = compileInfo.ubSize;
-    uint32_t tileNum = ((totalH + tileH - 1) / tileH) * ((totalW + tileW -1) / tileW);
+    if (tileH == 0 || tileW == 0) {
+        printf("[ERROR]: [ATVC][Pool] Tiling Error: tile height and width can not be zero!\n");
+        return false;
+    }
+    uint64_t tileNumH = (static_cast<uint64_t>(totalH) + tileH - 1) / tileH;
+    uint64_t tileNumW = (static_cast<uint64_t>(totalW) + tileW - 1) / tileW;
+    uint64_t tileNumWide = tileNumH * tileNumW;
+    if (tileNumWide > std::numeric_limits<uint32_t>::max()) {
+        printf("[ERROR]: [ATVC][Pool] Tiling Error: tile count exceeds the supported range.\n");
+        return false;
+    }
+    uint32_t tileNum = static_cast<uint32_t>(tileNumWide);
     param.tilingData.blockNum = tileNum;
     PoolTilingHyperParam hyperParam{};
     if (!CheckPoolHyperParam(hyperParam)) {

@@ -40,6 +40,17 @@ struct PoolParam {
     uint32_t totalCnt = 0;      // The number of elements in a single Tensor
     uint32_t nBufferNum = 2;    // The number of Tensors in each queue
 };
+
+namespace Kernel {
+inline uint32_t GetPoolTileExtent(uint32_t offset, uint32_t total, uint32_t tile)
+{
+    if (offset >= total) {
+        return 0;
+    }
+    uint32_t remaining = total - offset;
+    return tile < remaining ? tile : remaining;
 }
+} // namespace Kernel
+} // namespace ATVC
 
 #endif
