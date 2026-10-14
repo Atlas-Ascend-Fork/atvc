@@ -1206,7 +1206,7 @@ struct PostComputeAddOfBroadcast {
     */
     template <typename DataType>
     __aicore__ inline void operator()(AscendC::LocalTensor<DataType> y, AscendC::LocalTensor<DataType> z, AscendC::LocalTensor<DataType> x,
-        uint32_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams) {}
+        uint64_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams) {}
 };
 ```
 

@@ -16,6 +16,7 @@
 #include "reduce/common/reduce_common.h"
 #include "reduce/host/reduce_host.h"
 #include "broadcast/common/broadcast_common.h"
+#include "broadcast/common/broadcast_copyout.h"
 #include "broadcast/host/broadcast_host.h"
 #include "platform_stub.h"
 
@@ -184,4 +185,35 @@ TEST_F(TestAtvcTiling, TestAtvcTilingBroadcastToCase)
     shapeOut = {8, 23, 83, 2, 1024};
     ret = ATVC::Host::CalcBroadcastTiling<BroadcastOpTraits>(shapeIn, shapeOut, &policy, &param);
     EXPECT_EQ(ret, true);
+}
+
+TEST_F(TestAtvcTiling, TestBroadcastCopyOutOffsetUses64Bit)
+{
+    using BroadcastOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>>;
+    constexpr int64_t width = 134217736;
+    std::vector<int64_t> shapeIn{1, width};
+    std::vector<int64_t> shapeOut{40, width};
+    ATVC::BroadcastParam param;
+    ATVC::BroadcastPolicy policy = {-1, -1, -1};
+
+    ASSERT_TRUE(ATVC::Host::CalcBroadcastTiling<BroadcastOpTraits>(shapeIn, shapeOut, &policy, &param));
+    ASSERT_EQ(policy.patternID, ATVC::AB_PATTERN::ABA);
+    ASSERT_EQ(param.tilingData.B1, 5);
+    ASSERT_EQ(param.tilingData.B2, 8);
+    uint64_t lastBatchOffset = ATVC::CalcBroadcastCopyOutOffset(
+        policy.patternID, (param.tilingData.B1 - 1) * param.tilingData.B2, param.tilingData.dstShape[1], 0,
+        param.tilingData.A2, param.tilingData.dstShape[0]);
+    EXPECT_EQ(lastBatchOffset, 4294967552ULL);
+    EXPECT_GT(lastBatchOffset, 0xffffffffULL);
+
+    shapeOut = {24, width};
+    ASSERT_TRUE(ATVC::Host::CalcBroadcastTiling<BroadcastOpTraits>(shapeIn, shapeOut, &policy, &param));
+    ASSERT_EQ(policy.patternID, ATVC::AB_PATTERN::ABA);
+    ASSERT_EQ(param.tilingData.B1, 3);
+    ASSERT_EQ(param.tilingData.B2, 8);
+    uint64_t controlOffset = ATVC::CalcBroadcastCopyOutOffset(
+        policy.patternID, (param.tilingData.B1 - 1) * param.tilingData.B2, param.tilingData.dstShape[1], 0,
+        param.tilingData.A2, param.tilingData.dstShape[0]);
+    EXPECT_EQ(controlOffset, 2147483776ULL);
+    EXPECT_LT(controlOffset, 0xffffffffULL);
 }
