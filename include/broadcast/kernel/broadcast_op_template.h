@@ -19,6 +19,7 @@
 #include "common/ops_utils_device.h"
 #include "broadcast/kernel/utils/broadcast_buf_pool.h"
 #include "broadcast/kernel/utils/broadcast_util.h"
+#include "broadcast/common/broadcast_copyout.h"
 #include "broadcast/kernel/broadcast_compute.h"
 
 namespace ATVC {
@@ -33,7 +34,7 @@ struct BroadcastDataView {
     uint32_t B1;                // B1 who actually participated in the calculation
     uint32_t dimAOffset;        // The offset of input and output data in dimension A
     uint32_t dimBOffset;        // The offset of input and output data in the B dimension
-    uint32_t copyOutBaseOffset; // Copy the base address of inter nuclear data
+    uint64_t copyOutBaseOffset; // Copy the base address of inter nuclear data
 };
 
 namespace Kernel {
@@ -238,18 +239,13 @@ private:
         AllocLocalTensors<0, localTensorCount, false>(args...);
     }
 
-    __aicore__ inline void CopyOutBatch(BroadcastDataView &view,
-                                        uint32_t dimACount,
+    __aicore__ inline void CopyOutBatch(BroadcastDataView &view, uint32_t dimACount,
                                         AscendC::LocalTensor<DataType> &output)
     {
-        uint32_t dimBCount = 0;  
+        uint64_t dimBCount = 0;
         for (int i = 0; i < view.B1; i++) {
-            uint32_t copyOutOffset;
-            if (SelectBroadcastPolicy.patternID == AB_PATTERN::ABA) {
-                copyOutOffset = dimBCount * view.dimASize + dimACount * tilingData_->A2;
-            } else {
-                copyOutOffset = dimACount * tilingData_->A2 * view.dimBSize + dimBCount;
-            }
+            uint64_t copyOutOffset = ATVC::CalcBroadcastCopyOutOffset(
+                SelectBroadcastPolicy.patternID, dimBCount, view.dimASize, dimACount, tilingData_->A2, view.dimBSize);
             CopyOut(output, copyOutOffset + view.copyOutBaseOffset, view);
             dimBCount += tilingData_->B2;
         }
@@ -302,26 +298,26 @@ private:
         bufPool_.ResetEvent();
     }
 
-    __aicore__ inline uint32_t CalcCopyOutBaseOffset(BroadcastDataView &view)
+    __aicore__ inline uint64_t CalcCopyOutBaseOffset(BroadcastDataView &view)
     {
-        uint32_t copyOutBaseOffset = 0;
+        uint64_t copyOutBaseOffset = 0;
         // Calculate the base offset for copying out
         if (SelectBroadcastPolicy.patternID == AB_PATTERN::ABA) {
-            if (tilingData_->A0 != 1) { // If A is split across cores, add the partial-A offset.
+            if (tilingData_->A0 != 1) {  // If A is split across cores, add the partial-A offset.
                 copyOutBaseOffset += view.dimAOffset;
             }
-            if (tilingData_->B0 != 1) { // If B is split across cores, add the partial-B offset.
-                copyOutBaseOffset += view.dimBOffset * view.dimASize;
+            if (tilingData_->B0 != 1) {  // If B is split across cores, add the partial-B offset.
+                copyOutBaseOffset += static_cast<uint64_t>(view.dimBOffset) * view.dimASize;
             }
         } else {
-            if (tilingData_->A0 != 1) { // If A is split across cores, add the partial-A offset.
-                copyOutBaseOffset += view.dimAOffset * view.dimBSize;
+            if (tilingData_->A0 != 1) {  // If A is split across cores, add the partial-A offset.
+                copyOutBaseOffset += static_cast<uint64_t>(view.dimAOffset) * view.dimBSize;
             }
-            if (tilingData_->B0 != 1) { // If B is split across cores, add the partial-B offset.
+            if (tilingData_->B0 != 1) {  // If B is split across cores, add the partial-B offset.
                 copyOutBaseOffset += view.dimBOffset;
             }
-        }    
-        return copyOutBaseOffset;    
+        }
+        return copyOutBaseOffset;
     }
 
     __aicore__ inline void CalcView(BroadcastDataView &view)
@@ -386,8 +382,8 @@ private:
             "block count is %u.\n", copyInOffset, copyInParams.blockLen, copyInParams.blockCount);
     }
 
-    __aicore__ inline void CopyOutNonAligned(AscendC::LocalTensor<DataType> &output,
-                                             uint32_t copyOutOffset, BroadcastDataView &view)
+    __aicore__ inline void CopyOutNonAligned(AscendC::LocalTensor<DataType> &output, uint64_t copyOutOffset,
+                                             BroadcastDataView &view)
     {
         uint32_t blockId = AscendC::GetBlockIdx();
         uint32_t dstDataSize = view.outShape[0] * view.outShape[1];
@@ -410,16 +406,18 @@ private:
         copyOutParams.dstStride = dstShape * DATA_SIZE - copyOutParams.blockLen;
         bufPool_.template SetCopyOutSync<DataType, AscendC::HardEvent::V_MTE3>(output);
         bufPool_.template WaitCopyOutSync<DataType, AscendC::HardEvent::V_MTE3>(output);
-        if constexpr(HAS_POST_COMPUTE) {
+        if constexpr (HAS_POST_COMPUTE) {
             ProcessPostCompute(output, copyOutOffset, copyOutParams);
             return;
         }
         AscendC::DataCopyPad(dstGlobal_[copyOutOffset], output, copyOutParams);
-        ATVC::Kernel::DebugPrintf("[INFO]: [ATVC][Broadcast][CopyOut] Offset is %u, block len is %u block count is %u.\n",
-                                  copyOutOffset, copyOutParams.blockLen, copyOutParams.blockCount);
+        ATVC::Kernel::DebugPrintf(
+            "[INFO]: [ATVC][Broadcast][CopyOut] Offset is %llu, block len is %u block count is %u.\n",
+            static_cast<unsigned long long>(copyOutOffset), copyOutParams.blockLen, copyOutParams.blockCount);
     }
 
-    __aicore__ inline void CopyOut(AscendC::LocalTensor<DataType> &output, uint32_t copyOutOffset, BroadcastDataView &view)
+    __aicore__ inline void CopyOut(AscendC::LocalTensor<DataType> &output, uint64_t copyOutOffset,
+                                   BroadcastDataView &view)
     {
         CopyOutNonAligned(output, copyOutOffset, view);
     }

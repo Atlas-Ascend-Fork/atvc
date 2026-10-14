@@ -382,7 +382,7 @@ elewiseTemplate.Run(x, y, &param);
 - 计算达到UB上限的单核单输入元素个数值`ubLimitCnt`：UB上限内存大小 / 所有输入输出及temp单个元素的内存之和。
 - 计算`tiledCnt`：
     - 计算每个核需要处理的数据元素量`avgElePerBlock = totalCnt / blockNum`。
-    - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = dataSplitFactor / dataSplitFactor`。
+    - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = avgElePerBlock / dataSplitFactor[i]`。
     - `tiledCnt`调整： 不超上限`ubLimitCnt`， 不小于下限32，且最后的`tiledCnt`要做32元素对齐。
 - 计算`tailBlockCnt`：总的基本块数量（`totalCopyCnt`）% block块的数量，即为剩余需要处理的尾块的数量。
 - 计算`numPerBlock`：计算每一个block需要处理多少个基本块，即`numPerBlock = totalCopyCnt / blockNum`。
@@ -1144,7 +1144,7 @@ ATVC框架支持Broadcast与Elementwise组合的算子通过扩展BroadcastOpTem
 下面将以Add算子（Broadcast + Elementwise, 为区别Add单算字，命名为AddWithBroadcast算子）搭建为样例，按照组装顺序介绍组合算子类的开发流程。
 
 ### 3.4.2 组合算子开发步骤
-下面是用户利用Components模板实现自定义算子所需要实现的关键步骤，完整样例见[add_with_broadcast](..\examples\add_with_broadcast\add_with_broadcast.cpp) :
+下面是用户利用Components模板实现自定义算子所需要实现的关键步骤，完整样例见[add_with_broadcast](../examples/add_with_broadcast/add_with_broadcast.cpp) :
 ```cpp
 // AddWithBroadcast算子的描述：两个输入，一个输出，类型均为float
 using BroadcastOpTraits = ATVC::OpTraits<ATVC::OpInputs<float, float>, ATVC::OpOutputs<float>, ATVC::OpTemps<float>>;
@@ -1206,7 +1206,7 @@ struct PostComputeAddOfBroadcast {
     */
     template <typename DataType>
     __aicore__ inline void operator()(AscendC::LocalTensor<DataType> y, AscendC::LocalTensor<DataType> z, AscendC::LocalTensor<DataType> x,
-        uint32_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams) {}
+        uint64_t copyOutOffset,  AscendC::DataCopyExtParams &copyOutParams) {}
 };
 ```
 
@@ -1944,7 +1944,7 @@ TanhGrad<AddOpTraits><<<blockNum, nullptr, stream>>>(dyDevice, yDevice, zDevice,
 - 计算达到UB上限的单核单输入元素个数值`ubLimitCnt`：UB上限内存大小 / 所有输入输出及temp单个元素的内存之和。
 - 计算`tiledCnt`：
     - 计算每个核需要处理的数据元素量`avgElePerBlock = totalCnt / blockNum`。
-    - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = dataSplitFactor / dataSplitFactor`。
+    - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = avgElePerBlock / dataSplitFactor[i]`。
     - `tiledCnt`调整： 不超上限`ubLimitCnt`， 不小于下限32，且最后的`tiledCnt`要做32元素对齐。
 #### 4.3.1.2 Elementwise TilingData定义
 Elementwise模板通用Tiling切分的数据结构为EleWiseTilingData，描述了核间切分和单核内切分的策略，其定义如下：

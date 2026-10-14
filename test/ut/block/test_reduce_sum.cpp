@@ -19,6 +19,7 @@
 
 namespace ATVC {
 using ReduceOpTraits = OpTraits<OpInputs<float>, OpOutputs<float>>;
+using ReduceInt32OpTraits = OpTraits<OpInputs<int32_t>, OpOutputs<int32_t>>;
 
 template <typename Traits, const auto &Policy>
 __global__ __aicore__ void ReduceSumCustom(GM_ADDR x, GM_ADDR y, ReduceParam* reduceParam)
@@ -38,6 +39,30 @@ void TestNoReduceCopy(float *x, float *y, ReduceParam *param)
 {
     ReduceSumCustom<ReduceOpTraits, REDUCE_POLICY0>(
         reinterpret_cast<uint8_t *>(x), reinterpret_cast<uint8_t *>(y), param);
+}
+
+void TestReduceSumInt32(const int32_t *x, int32_t *y)
+{
+    ReduceParam param{};
+    param.tilingData.factorACntPerCore = 1;
+    param.tilingData.factorATotalCnt = 1;
+    param.tilingData.ubFactorA = 1;
+    param.tilingData.factorRCntPerCore = 1;
+    param.tilingData.factorRTotalCnt = 1;
+    param.tilingData.ubFactorR = 1;
+    param.tilingData.groupR = 1;
+    param.tilingData.outSize = 1;
+    param.tilingData.basicBlock = 49152U;
+    param.tilingData.coreNum = 1;
+    param.tilingData.shape[0] = 1;
+    param.tilingData.shape[1] = 2;
+    param.tilingData.stride[0] = 2;
+    param.tilingData.stride[1] = 1;
+    param.tilingData.dstStride[0] = 1;
+    param.tilingData.dstStride[1] = 1;
+    param.tilingData.meanVar = 0.5f;
+    ReduceSumCustom<ReduceInt32OpTraits, REDUCE_POLICY2>(
+        reinterpret_cast<uint8_t *>(const_cast<int32_t *>(x)), reinterpret_cast<uint8_t *>(y), &param);
 }
 
 class AtvcReduceSumTestsuite : public testing::Test {
@@ -120,5 +145,25 @@ TEST_F(AtvcReduceSumTestsuite, NoReduceCopyAlignedControl)
     for (size_t i = 8; i < 16; ++i) {
         EXPECT_FLOAT_EQ(output[i], kCanary);
     }
+}
+
+TEST_F(AtvcReduceSumTestsuite, Int32SumPreservesUnitsAboveFloatPrecisionBoundary)
+{
+    const int32_t input[2] = {16777216, 1};
+    int32_t output = -1;
+
+    TestReduceSumInt32(input, &output);
+
+    EXPECT_EQ(output, 16777217);
+}
+
+TEST_F(AtvcReduceSumTestsuite, Int32SumControlAtFloatPrecisionBoundary)
+{
+    const int32_t input[2] = {16777215, 1};
+    int32_t output = -1;
+
+    TestReduceSumInt32(input, &output);
+
+    EXPECT_EQ(output, 16777216);
 }
 }  // namespace ATVC
