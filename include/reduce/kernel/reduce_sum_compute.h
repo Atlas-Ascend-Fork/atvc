@@ -332,8 +332,19 @@ private:
                     dstTensor[dimAIdx], srcTensor[dimAIdx * param.dimR], param.loopRNum, curDimA, 1, 1, param.repStride);
             }
             AscendC::PipeBarrier<PIPE_V>();
-        } else if constexpr (AscendC::IsSameType<PrompteDtype, int32_t>::value ||
-                             AscendC::IsSameType<PrompteDtype, uint32_t>::value) {
+        } else if constexpr (AscendC::IsSameType<PrompteDtype, int32_t>::value) {
+            // WholeReduceSum only supports floating-point accumulation on this path. Read the
+            // remaining (at most maskAddRNum) int32 values directly so that sums stay exact.
+            for (uint16_t dimAIdx = 0; dimAIdx < param.dimA; ++dimAIdx) {
+                uint32_t sum = 0;
+                uint32_t srcOffset = dimAIdx * param.dimR;
+                for (uint16_t r = 0; r < param.loopRNum; ++r) {
+                    sum += static_cast<uint32_t>(srcTensor(srcOffset + r));
+                }
+                dstTensor(dimAIdx) = static_cast<int32_t>(sum);
+            }
+            AscendC::PipeBarrier<PIPE_V>();
+        } else if constexpr (AscendC::IsSameType<PrompteDtype, uint32_t>::value) {
             // Cast to float for higher-precision accumulation
             AscendC::LocalTensor<float> interpreSrc = srcTensor.template ReinterpretCast<float>();
             AscendC::LocalTensor<float> interpreDst = dstTensor.template ReinterpretCast<float>();
