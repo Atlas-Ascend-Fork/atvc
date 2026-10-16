@@ -306,13 +306,14 @@ private:
 
         using DataType = typename T::DataType;
         constexpr uint32_t typeAlignCnt = UB_ALIGN_32 / sizeof(DataType);
-        uint16_t srcStride = (uBTensorW - curTileScope_.layout.width) / typeAlignCnt;  // srcStride: 32B aligned
-        uint16_t dstStride = (totalLayout.width - curTileScope_.layout.width) * sizeof(DataType);
+        uint32_t srcStride = (uBTensorW - curTileScope_.layout.width) / typeAlignCnt;  // UB stride: 32B units
+        uint32_t dstStride = (totalLayout.width - curTileScope_.layout.width) * sizeof(DataType);  // GM stride: B
         // curTileH need tobe in [0, 4096], otherwise, need multi data copy.
-        struct AscendC::DataCopyParams repeatParams = {static_cast<uint16_t>(curTileScope_.layout.height),
-            static_cast<uint16_t>(curTileScope_.layout.width * sizeof(DataType)),
+        struct AscendC::DataCopyExtParams repeatParams = {static_cast<uint16_t>(curTileScope_.layout.height),
+            static_cast<uint32_t>(curTileScope_.layout.width * sizeof(DataType)),
             srcStride,
-            dstStride};
+            dstStride,
+            0};
         AscendC::DataCopyPad(tensorInfo.gmTensor[copyGmOffset], outLocalI[ubCopyOffset], repeatParams);
         ATVC::Kernel::DebugPrintf(
             "[INFO]:[ATVC][Pool][CopyOut]ubCopyOffset: %u, copyGmOffset: %u, srcStride: %u dstStride: %u\n",
