@@ -21,9 +21,9 @@
    ```
 其中`aclnnReduceSumCustomGetWorkspaceSize`为第一段接口，主要用于计算本次API调用计算过程中需要多少的`workspace`内存。获取到本次API计算需要的`workspace`大小之后，开发者按照`workspaceSize`大小申请Device侧内存，然后调用第二段接口`aclnnReduceSumCustom`执行计算。具体参考[单算子API调用](https://hiascend.com/document/redirect/CannCommunityAscendCInVorkSingleOp)章节。
 ## 运行样例算子
-### 1. 编译算子工程
+### 编译算子工程
 运行此样例前，请参考[编译算子工程](../README.md#operatorcompile)完成前期准备。
-### 2. aclnn调用样例运行
+### aclnn调用样例运行
 
   - 进入到样例目录   
     以命令行方式下载样例代码，master分支为例。

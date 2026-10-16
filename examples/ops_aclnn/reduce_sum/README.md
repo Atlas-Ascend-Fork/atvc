@@ -52,10 +52,10 @@ CANN软件包中提供了工程创建工具msOpGen，ReduceSumCustom算子工程
 - 调用执行自定义算子。
 
 详细操作如下所示。
-### 1. 获取源码包及环境配置
+### 获取源码包及环境配置
 编译运行此样例前，请参考[准备：获取样例代码](../README.md#codeready)获取源码包及环境变量的准备。
 
-### 2. 生成自定义算子工程，复制host和kernel实现并编译算子<a name="operatorcompile"></a>
+### 生成自定义算子工程，复制host和kernel实现并编译算子<a name="operatorcompile"></a>
   - 导入ATVC环境变量
     ```bash
     # 如果不导入，默认使用./atvc/include路径
@@ -79,7 +79,7 @@ CANN软件包中提供了工程创建工具msOpGen，ReduceSumCustom算子工程
 
     脚本运行成功后，会在当前目录下创建CustomOp目录，编译完成后，会在CustomOp/build_out中，生成自定义算子安装包custom_opp_\<target os>_\<target architecture>.run，例如“custom_opp_ubuntu_x86_64.run”。
 
-### 3. 部署自定义算子包
+### 部署自定义算子包
 - 部署自定义算子包前，请确保存在自定义算子包默认部署路径环境变量ASCEND_OPP_PATH。
     ```bash
     echo $ASCEND_OPP_PATH
@@ -99,5 +99,5 @@ CANN软件包中提供了工程创建工具msOpGen，ReduceSumCustom算子工程
     ```
   命令执行成功后，自定义算子包中的相关文件将部署至opp算子库环境变量ASCEND_OPP_PATH指向的的vendors/customize目录中。
 
-### 4. 调用执行算子工程
+### 调用执行算子工程
 - [aclnn调用ReduceSumCustom算子工程](./AclNNInvocationNaive/README.md)
