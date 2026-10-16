@@ -10,12 +10,16 @@
 # See LICENSE in the root of the software repository for the full text of the License.
 # -----------------------------------------------------------------------------------------------------------
 
+import os
 import shutil
+import subprocess
+from subprocess import PIPE, STDOUT
 from argparse import Namespace
 from itertools import chain
-from typing import Callable, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Callable, Dict, List, NamedTuple, Optional, Tuple
 
 from .utils.comm_log import CommLog
+from .utils.pkg_utils import CompressError
 
 
 class PackageName:
@@ -144,7 +148,7 @@ def compose_makeself_command(params: MakeselfPkgParams) -> str:
         get_cleanup_commands(),
         [params.package_name, params.comments]
        )
-    
+
     command = ' '.join(commands)
     return command
 
