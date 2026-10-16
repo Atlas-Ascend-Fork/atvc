@@ -35,9 +35,9 @@ ReduceSum是对输入tensor的指定轴进行规约累加的计算并输出结�
 - 调用执行PyTorch算子。
 
 详细操作如下所示。
-### 1. 获取源码包及环境配置
+### 获取源码包及环境配置
   编译运行此样例前，请参考[准备：获取样例代码](../README.md#codeready)获取源码包及环境变量的准备。
-### 2. 安装PyTorch环境
+### 安装PyTorch环境
 参考[torch的安装](https://gitcode.com/Ascend/pytorch)进行安装torch、torch_npu环境，torch、torch_npu版本支持2.7.1及以上。
 `cann-hccl`等运行态依赖的安装方法请参考上述安装文档中的说明。
 下载对应`Ascend-cann-A3-ops_${cann_version}_linux-${arch}.run`包，可从[软件包索引](https://ascend.devcloud.huaweicloud.com/artifactory/cann-run-mirror/software/master/)中选择最新发布日期对应的目录，根据实际架构获取`Ascend-cann-A3-ops_${cann_version}_linux-${arch}.run`。
@@ -46,7 +46,7 @@ ReduceSum是对输入tensor的指定轴进行规约累加的计算并输出结�
 pip install pyyaml numpy expecttest hypothesis
 ```
 
-### 3. 基于ATVC编写PyTorch算子的实现<a name="operatorcompile"></a>
+### 基于ATVC编写PyTorch算子的实现<a name="operatorcompile"></a>
   - 算子kernel侧实现
 
     编写kernel侧函数，完成指定的运算。参考[reduce_sum_impl.h](./reduce_sum_impl.h)和[开发指南](../../../docs/02_developer_guide.md)完成核函数的实现。
@@ -165,7 +165,7 @@ pip install pyyaml numpy expecttest hypothesis
     python3 run_op.py
     ```
 
-### 4. 基于ATVC编写PyTorch算子的调用验证
+### 基于ATVC编写PyTorch算子的调用验证
   - 导入ATVC环境变量
     ```bash
     # 如果不导入，默认使用./atvc/include路径
