@@ -143,12 +143,7 @@ usage() {
       run_example)
         echo "Run examples Options:"
         echo $dotted_line
-        echo "    --run_example example_name   Compile and execute example"
-        echo $dotted_line
-        echo "Examples:"
-        echo "    bash build.sh --run_example 00_basic_matmul"
-        echo "    bash build.sh --run_example 00_basic_matmul,01_misplace_core_matmul"
-        echo "    bash build.sh --run_example all"
+        echo "    --run_example example_name   Temporarily unavailable"
         return
         ;;
     esac
@@ -178,7 +173,7 @@ usage() {
   echo "    --noexec                     Only compile ut, do not execute the compiled executable file, only can bu used with -u"
   echo "    --cov                        When building uTest locally, count the coverage, only can bu used with -u"
   echo "    --asan                       Enable ASAN (Address Sanitizer)"
-  echo "    --run_example                Compile and execute example"
+  echo "    --run_example                Temporarily unavailable"
   echo "to be continued ..."
 }
 
@@ -401,7 +396,8 @@ build_ut() {
 }
 
 build_example() {
-  return # 当前子包bisheng有编译问题，暂时下线
+  echo "[ERROR] --run_example is temporarily unavailable: the example compiler is disabled." >&2
+  return 1
   echo $dotted_line
   echo "Start to run examples,name:${EXAMPLE_NAME}"
   clean_build
