@@ -1,4 +1,4 @@
-# 1 ATVC概述
+# ATVC概述
 ATVC将Vector算子开发流程中的可定制化模块抽象出了Host层和Kernel层，它们的基本概念如下：<br>
 - Host层：在CPU Host侧执行，提供Tiling计算&策略分派的API，它根据实际数据场景帮助用户计算出较优的数据搬运等运行态参数。
 - Kernel层：它是利用Ascend C API搭建出的一系列Vector算子模板类，屏蔽了算子开发中用户无需感知的数据搬入搬出以及资源申请等固定模块，并将核心计算模块开放给用户定义。
@@ -68,10 +68,10 @@ Pool类算子常用于神经网络的池化层，可以达到降采样、特征�
  [14, 16]]
 
 
-# 2 公共数据结构
+# 公共数据结构
 我们将对ATVC核函数定义以及调用涉及的三个公共数据概念：算子原型的编译态参数`OpTraits`、Tiling计算的运行态参数`Param`、 模板策略的编译态参数`Policy`分别进行介绍。
 
-## 2.1 OpTraits
+## OpTraits
 ATVC框架参考C++模板元编程的`type_list`实现，推出了`ATVC::OpInputs`、`ATVC::OpOutputs`、`ATVC::OpTemps`的模板结构体分别用于描述算子的计算输入、计算输出、计算过程的临时资源，支持C++基础类型作为不定长模板参数传入。它们三者组成了整个ATVC框架编译态参数`OpTraits`。`ATVC::OpTraits`的完整数据定义如下：<br>
 ```cpp
 // atvc_opdef.h
@@ -119,10 +119,10 @@ using AddOpTraits = ATVC::OpTraits<AddInputs, AddOutputs, AddTemps>; // Add算�
 ```
 
 
-## 2.2 Param
+## Param
 ATVC框架提供了`ATVC::EleWiseParam`、`ATVC::ReduceParam`、`ATVC::BroadcastParam` 三个结构体来描述算子内部调度的Tiling数据和其他资源变量。Param 作为Host侧Tiling API的输出，它将传入ATVC框架的Kernel层算子模板，并在运行时指导算子内部模块完成数据的循环搬运与调度计算。<br>
 
-以下为ElementWise类算子的`ATVC::EleWiseParam`参与计算的伪代码，详细使用流程请参考本文档的 [3.1.2.3 Policy与Param的计算与传递](#3123-policy与param的计算与传递)：
+以下为ElementWise类算子的`ATVC::EleWiseParam`参与计算的伪代码，详细使用流程请参考本文档的 [Policy与Param的计算与传递](#policy与param的计算与传递)：
 ```cpp
 // 声明运行态参数param
 ATVC::ElewiseParam param;
@@ -138,10 +138,10 @@ aclrtMemcpy(paramDevice, sizeof(param), reinterpret_cast<uint8_t*>(&param), size
 EleWiseKernel<<<param.tilingData.blockNum, nullptr, stream>>>(x, y, z, paramDevice);
 ```
 
-## 2.3 Policy
+## Policy
 编译态参数`Policy`（`ATVC::ReducePolicy`、`ATVC::BroadcastPolicy`）是ATVC框架里Kernel层对部分算子模板的拓展描述，它对应算子模板类在不同场景的实例化实现。它由Tiling API计算出，并在策略分派API（`ATVC::Host::ReduceAdapter`）里将运行态的Policy结果转化为模板参数并调用该场景下的最佳模板实现来完成高效的数据计算。<br>
 
-以下为Reduce算子开发场景中`ATVC::ReducePolicy`参与计算的伪代码，详细过程请参考[3.2.2.3 Policy与Param的计算与传递](#3223-policy与param的计算与传递)：
+以下为Reduce算子开发场景中`ATVC::ReducePolicy`参与计算的伪代码，详细过程请参考[Policy与Param的计算与传递](#policy与param的计算与传递)：
 ```cpp
 // 声明policy和param变量
 ATVC::ReducePolicy policy = {-1, -1, -1};
@@ -164,9 +164,9 @@ __global__ __aicore__ ReduceKernel(GM_ADDR x, GM_ADDR y, ATVC::ReduceParam param
 ```
 
 
-# 3 利用ATVC完成算子开发
-## 3.1 Elementwise算子开发
-### 3.1.1 Elementwise模板概述
+# 利用ATVC完成算子开发
+## Elementwise算子开发
+### Elementwise模板概述
 ATVC框架提供的Elementwise算子模块之间的交互如下（ATVC框架提供的模板及接口用黄色表示；开发自定义的模块用蓝色表示）：
 <img src="./images/elewise_dataflow.png" width="70%" height="70%" style="margin: 30px 0;"><br>
 
@@ -180,7 +180,7 @@ ATVC框架提供的Elementwise算子模块之间的交互如下（ATVC框架提�
 3. 定义Kernel层算子入口API，内部实例化计算模板类。
 
 
-### 3.1.2 Elementwise算子开发步骤
+### Elementwise算子开发步骤
 下面将以Sinh算子 $y = \frac{\exp(x) - \exp(-x)}{2}$ 的实现为样例，按照组成Kernel的顺序介绍Elementwise算子开发的关键步骤进行介绍。通过ATVC框架实现的完整SinhCustom算子样例代码见[样例代码](../examples/sinh_custom/sinh_custom.cpp)：
 ```cpp
 // 描述算子的输入输出以及临时计算资源
@@ -218,7 +218,7 @@ __global__ __aicore__ void SinhCustom(GM_ADDR x, GM_ADDR y, ATVC::EleWiseParam p
 SinhCustom<SinhOpTraits><<<param.tilingData.blockNum, nullptr, stream>>>(xDevice, yDevice, param);
 ...
 ```
-#### 3.1.2.1 实现计算逻辑
+#### 实现计算逻辑
 计算模板是用户必须在Elementwise 算子实现过程中完成的一类特殊模板类的定义。模板类无需关注数据如何从GM搬运到UB，只需重载`operator()`的公有接口，并在该仿函数内部实现`AscendC::LocalTensor`之间的计算逻辑。在Kernel层的组装阶段，计算模板将作为模板参数传入`ATVC::Kernel::EleWiseOpTemplate`，并在数据计算阶段被调用。下方为计算模板实现Sinh计算逻辑的代码样例：
 ```cpp
 #include "atvc.h" // 包含所有模板及API的总入口头文件
@@ -247,7 +247,7 @@ struct SinhComputeFunc {
 3. 开发定义的`operator()`仿函数的输入参数类型支持`AscendC::LocalTensor<T>`以及C++其他基础数据类型。形式参数需按照`ATVC::OpInputs<>`,`ATVC::OpOutputs<>`, `ATVC::OpTemps<>`声明的顺序填入，其他标量参数放在最后，根据用户计算场景按需传入。
 
 
-#### 3.1.2.2 实例化模板
+#### 实例化模板
 
 在Elementwise开发流程中，用户需要自行定义核函数接口。核函数内部通过`ATVC::Kernel::EleWiseOpTemplate`完成模板实例化。
 
@@ -290,7 +290,7 @@ extern "C" __global__ __aicore__ void SinhCustom(GM_ADDR x, GM_ADDR y, ATVC::Ele
 }
 ```
 
-#### 3.1.2.3 Policy与Param的计算与传递
+#### Policy与Param的计算与传递
 ATVC的Host层提供了Elementwise算子的通用Tiling算法API `ATVC::Host::CalcEleWiseTiling`，它根据算子计算原型`ATVC::OpTraits`以及数据大小计算出包含`ATVC::EleWiseTilingData`的运行态参数`ATVC::EleWiseParam`。`ATVC::EleWiseParam`在运行时将参与模板算子数据搬运从而实现较优计算。<br>`ATVC::EleWiseTilingData`和`ATVC::EleWiseParam`的数据结构定义如下：
 ```cpp
 namespace ATVC{
@@ -324,7 +324,7 @@ if (!ATVC::Host::CalcEleWiseTiling<SinhOpTraits>(eleNum, param)) {
     return -1;
 };
 ```
-### 3.1.3 Elementwise模板说明
+### Elementwise模板说明
 `ATVC::Kernel::EleWiseOpTemplate`为ATVC框架提供的内置Elementwise基本算子类，它实现了一套算子数据的搬运搬出、资源分配和释放的算子流程。它需要计算模板类作为模板参数传入来完成实例化。核函数通过调用它完成整套计算逻辑：1. 资源初始化; 2.将数据从GM搬运至UB; 3.按`OpTraits`的输入、输出、临时资源描述、其他标量的顺序传入计算模板类的仿函数完成数据的基块计算; 4.将结果从UB搬出至GM。
 
 下方为`ATVC::Kernel::EleWiseOpTemplate`模板类的外部接口介绍，完整模板类定义请参考[`elewise_op_template头文件`](../include/elewise/kernel/elewise_op_template.h)。
@@ -375,7 +375,7 @@ elewiseTemplate.Run(x, y, &param);
 ```
 
 
-### 3.1.4 切分策略算法说明
+### 切分策略算法说明
 下方为`ATVC::Host::CalcEleWiseTiling`函数内部计算Tiling参数的步骤，详细代码请参考[EleWise Tiling 算法](../include/elewise/host/elewise_host.h)：
 
 - 计算`blockNum`：计算`blockNum` = 总的元素量(`totalCnt`) / 单核数据量基线(`singleCoreBaseLine`), `blockNum`最小值为1， 最大值为平台提供的最大`vectorCore`值。
@@ -407,10 +407,10 @@ bool CalcEleWiseTiling(
 ```
 
 
-## 3.2 Reduce算子开发
+## Reduce算子开发
 
 
-### 3.2.1 Reduce模板概述
+### Reduce模板概述
 
 ATVC框架提供的Reduce算子模板类的模块之间的交互如下（ATVC框架提供的模板及接口用黄色表示；开发自定义的模块用蓝色表示）：
 <img src="./images/reduce_dataflow.png" width="70%" height="70%" style="margin: 30px 0;"><br>
@@ -425,7 +425,7 @@ Reduce模板算子内部根据计算的数据大小、Shape、Reduce axis轴完�
 
 
 
-### 3.2.2 Reduce算子开发步骤
+### Reduce算子开发步骤
 下面将以ReduceSum（对输入Tensor的特定轴上的数据做求和操作）的算子搭建为样例，按照组装顺序介绍Reduce算子类的关键步骤。通过ATVC框架实现的完整ReduceSum算子样例代码见[样例代码](../examples/reduce_sum/reduce_sum.cpp)：
 ```cpp
 
@@ -465,7 +465,7 @@ int32_t main(int32_t argc, char* argv[])
 
 ```
 
-#### 3.2.2.1 实现计算逻辑
+#### 实现计算逻辑
 Reduce类的计算模板涉及多核之间的数据结果同步以及核内分块的对齐计算，用户自定义难度较高，因此ATVC框架提供了Reduce类的内置计算模板，并实现了Reduce在单核内与多核间的计算与同步等函数接口。
 这类计算模板将作为模板参数传入`ATVC::ReduceOpTemplate`中，并在数据计算以及同步阶段被调用。
 下方为ATVC框架内置的`ATVC::ReduceSumCompute`计算模板的伪代码介绍，完整代码定义请参考[reduce_sum.h](../include/reduce/kernel/reduce_sum_compute.h)。
@@ -568,7 +568,7 @@ Reduce计算模板类将在数据计算阶段被`ReduceOpTemplate`算子模板�
     3. 计算多核之间&同一核内的多次UB结果 `__aicore__ inline void ReduceBetweenUB(...)`。
     4. 返回非对齐场景不参与计算的尾部数据的填充值 `__aicore__ inline U GetPaddingValue()`。
 
-#### 3.2.2.2 实例化模板
+#### 实例化模板
 在Reduce开发流程中，用户需要定义封装核函数接口。核函数内部通过`ATVC::Kernel::ReduceOpTemplate`完成模板实例化。
 Kernel层的自定义API样例如下：
 ```cpp
@@ -598,8 +598,8 @@ Reduce算子开发场景下，核函数定义必须遵从以下约束：
 3. 核函数须实例化`ATVC::Kernel::ReduceOpTemplate`变量并调用它的`Run(GM_ADDR x, GM_ADDR y, ATVC::ReduceParam* param)`接口来实现数据的调度运算。
 
 
-#### 3.2.2.3 Policy与Param的计算与传递
-##### 3.2.2.3.1 CalcReduceTiling
+#### Policy与Param的计算与传递
+##### CalcReduceTiling
 `ATVC::Host::CalcReduceTiling`是ATVC在Host侧提供的针对Reduce类算子的通用Tiling API，它以算子计算模板`ATVC::OpTraits`作为模板参数，根据实际计算场景得出`ATVC::ReduceParam`以及对应算子模板实现的`ATVC::ReducePolicy`。
 `ATVC::ReduceParam`用于保存Reduce数据计算搬运的，`ATVC::ReduceTilingData`以及临时空间的资源变量，它们的数据结构定义如下：
 
@@ -666,9 +666,9 @@ int32_t main(int32_t argc, char* argv[])
 }
 ```
 
-##### 3.2.2.3.2 ReduceOpAdapter
+##### ReduceOpAdapter
 在调用CalcReduceTiling接口获取动态参数`ATVC::ReducePolicy`后，仍需要在Kernel直调阶段将其转化为编译态参数来实例化`ReduceOpTemplate`模板完成调用。ATVC框架对`ATVC::ReducePolicy`这特殊的模板参数提供了一套运行态参数转编译态参数的策略分派机制`ReduceOpAdapter`，它将框架`CalcReduceTiling`的输出作为输入，替用户完成`ATVC::ReduceParam`资源的申请及释放的同时，将运行态的`ATVC::ReducePolicy`参数转化为模板参数完成自定义核函数的策略选择调用。
-基于[3.2.2.2](#3222-实例化模板) 章节中核函数的接口定义，ATVC框架只给出`ReduceOpAdapter`的示范代码，用户亦可根据实际计算场景替换其中的核函数调用：
+基于[实例化模板](#实例化模板) 章节中核函数的接口定义，ATVC框架只给出`ReduceOpAdapter`的示范代码，用户亦可根据实际计算场景替换其中的核函数调用：
 
 ```cpp
 // 当前ATVC框架支持的Reduce类算子的不同模板参数
@@ -725,7 +725,7 @@ using ReduceOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<flo
 }
 ```
 
-### 3.2.3 Reduce模板说明
+### Reduce模板说明
 `ATVC::Kernel::ReduceOpTemplate`是一套基本的Reduce算子类，它实现了一套算子数据的搬运搬出、资源分配和释放的流程。Kernel层的算子模板需要计算模板类作为模板参数传入来完成实例化。在调用阶段，算子类将按照固定参数顺序调用计算模板类的对应接口，完成数据的计算。
 相比Elementwise算子模板不同的是，ReduceOpTemplate内置了不同场景的Reduce实现，并在编译时通过`ATVC::ReducePolicy`类型的结构体来实现实例化。ReduceOpTemplate内部将根据模板参数决定数据将由哪类具体的模板实例计算。`ATVC::ReducePolicy`的数据定义如下：
 
@@ -787,9 +787,9 @@ __global__ __aicore__ void ReduceCustom(GM_ADDR x, GM_ADDR y, ATVC::ReduceParam 
 
 
 
-## 3.3 Broadcast算子开发
+## Broadcast算子开发
 
-### 3.3.1 Broadcast模板概述
+### Broadcast模板概述
 ATVC框架提供的Broadcast算子模板类的模块之间的交互如下（ATVC框架提供的模板及接口用黄色表示；开发自定义的模块用蓝色表示）：
 <img src="./images/broadcast_dataflow.png" width="70%" height="70%" style="margin: 30px 0;"><br>
 Broadcast模板算子内部根据数据类型、输入/输出Shape完成某个轴上数据扩充的功能，ATVC将各种计算调度场景抽象为`ATVC::BroadcastPolicy`。在算子调用阶段，分派策略API可根据Tiling API计算出的`ATVC::BroadcastPolicy`转化为编译态参数，结合计算模板来实例化`ATVC::Kernel::BroadcastOpTemplate`算子模板类。
@@ -802,7 +802,7 @@ Broadcast模板算子内部根据数据类型、输入/输出Shape完成某个�
 3. 定义Kernel层算子入口API，内部实例化计算模板类。
 
 
-### 3.3.2 Broadcast算子开发步骤
+### Broadcast算子开发步骤
 下面将以BroadcastTo（对输入Tensor在特定轴上做数据复制扩充操作）的算子搭建为样例，按照组装顺序介绍Broadcast类算子的关键步骤。通过ATVC框架实现的完整BroadcastCustom算子样例代码见[样例代码](../examples/broadcast_to/broadcast_to.cpp)：
 ```cpp
 // BroadcastTo算子的描述：一个输入，一个输出，类型均为float
@@ -841,7 +841,7 @@ int32_t main(int32_t argc, char* argv[])
 
 ```
 
-#### 3.3.2.1 实现计算逻辑
+#### 实现计算逻辑
 Broadcast计算模板是指Broadcast类算子在UB上实现将A轴的数据复制扩充到B轴上。在Kernel层的组装阶段，计算模板将作为模板参数传入`ATVC::Kernel::BroadcastOpTemplate`，并在数据计算阶段被调用。
 下方为ATVC框架内置的`ATVC::BroadcastCompute`计算模板的伪代码介绍，完整代码定义请参考[完整代码](../include/broadcast/kernel/broadcast_compute.h)。
 ```cpp
@@ -883,7 +883,7 @@ Broadcast计算模板类将在数据计算阶段被`BroadcastOpTemplate`算子�
 
 - 该模板类在实例化时固定传入`ATVC::OpTraits`类型的结构体作为模板参数，如`ATVC::OpTraits<ATVC::OpInputs<float>,ATVC::OpOutputs<float>`。
 
-#### 3.3.2.2 实例化模板
+#### 实例化模板
 在ATVC提供了Broadcast内部实现后，用户需要定义封装核函数接口。核函数内部通过`ATVC::Kernel::BroadcastOpTemplate`完成模板实例化。
 Kernel层的自定义API样例如下：
 ```cpp
@@ -914,8 +914,8 @@ Broadcast算子开发场景下，核函数定义必须遵从以下约束：
 2. 核函数须加入`KERNEL_TASK_TYPE_DEFAULT(KERNEL_TYPE_AIV_ONLY);`这段代码显示标注算子类型。
 3. 核函数须实例化`ATVC::Kernel::BroadcastOpTemplate`变量,实例化时需传入对应的计算实现模板类`ATVC::BroadcastCompute`，并调用它的`Run(GM_ADDR x, GM_ADDR y, ATVC::BroadcastParam* broadcastParam)`接口来实现数据的调度运算。
 
-#### 3.3.2.3 Policy与Param的计算与传递
-##### 3.3.2.3.1 CalcBroadcastTiling
+#### Policy与Param的计算与传递
+##### CalcBroadcastTiling
 `ATVC::Host::CalcBroadcastTiling`是ATVC在Host侧提供的针对Broadcast类算子的通用Tiling API，它以`ATVC::OpTraits`作为模板参数，根据实际输入输出Shape计算出对应算子模板需要的静态编译参数`ATVC::BroadcastPolicy`<br>和动态参数`ATVC::BroadcastParam`，其中`ATVC::BroadcastParam`包含了数据计算搬运的`ATVC::BroadcastTilingData`，它们的数据结构定义如下：
 
 ```cpp
@@ -999,9 +999,9 @@ int32_t main(int32_t argc, char* argv[])
     ...
 }
 ```
-##### 3.3.2.3.2 BroadcastOpAdapter
+##### BroadcastOpAdapter
 在调用CalcBroadcastTiling接口获取动态参数`ATVC::BroadcastPolicy`后，仍需要在Kernel直调阶段将其转化为编译态参数来实例化`BroadcastOpTemplate`模板完成调用。ATVC框架对`ATVC::BroadcastPolicy`这特殊的模板参数提供了一套运行态参数转编译态参数的策略分派机制`BroadcastOpAdapter`，它将框架`CalcBroadcastTiling`的计算得到的输出作为输入，替用户完成`ATVC::BroadcastParam`资源的申请及释放的同时，将运行态的`ATVC::BroadcastPolicy`参数转化为模板参数完成自定义核函数的策略选择调用。
-基于[3.3.2.2](#3322-实例化模板)章节中核函数的接口定义，这里只给出`BroadcastOpAdapter`的示范代码，用户亦可根据实际计算场景替换其中的核函数调用：
+基于[实例化模板](#实例化模板)章节中核函数的接口定义，这里只给出`BroadcastOpAdapter`的示范代码，用户亦可根据实际计算场景替换其中的核函数调用：
 
 ```cpp
 // 负责Broadcast类算子的调度，选择对应的Policy最佳策略并执行Kernel函数
@@ -1048,7 +1048,7 @@ int32_t main(int32_t argc, char* argv[])
 }
 
 ```
-### 3.3.3 Broadcast模板说明
+### Broadcast模板说明
 `ATVC::Kernel::BroadcastOpTemplate`是一套基本的Broadcast算子类，它实现了一套算子数据的搬运搬出、资源分配和释放的流程。Kernel层的算子模板需要计算模板类作为模板参数传入来完成实例化。在调用阶段，Broadcast算子模板将按照固定参数顺序调用计算模板类的`Compute`接口，完成数据的计算。
 与Broadcast算子模板类似，Broadcast算子模板内置了不同场景的Broadcast实现，并在编译时通过`ATVC::BroadcastPolicy`类型的结构体来实现实例化。Broadcast算子模板内部将根据模板参数决定数据将由哪类具体的模板实例计算。`ATVC::BroadcastPolicy`的数据定义如下：
 
@@ -1120,8 +1120,8 @@ __global__ __aicore__ void BroadcastCustom(GM_ADDR x, GM_ADDR y, ATVC::Broadcast
 }
 ```
 
-## 3.4 Elementwise + Broadcast组合算子开发
-### 3.4.1 组合模板概述
+## Elementwise + Broadcast组合算子开发
+### 组合模板概述
 ATVC框架支持Broadcast与Elementwise组合的算子通过扩展BroadcastOpTemplate的模板参数对用户提供接口，开发者可以根据算子实际需求来定制组合，框架支持以下组合：Elementwise + Broadcast、Broadcast + Elementwise、Elementwise + Broadcast + Elementwise。下面以Broadcast与Elementwise组合为例进行详细讲解。
 
 组合算子模板类的模块之间的交互如下（ATVC框架提供的模板及接口用黄色表示；开发自定义的模块用蓝色表示）：
@@ -1143,7 +1143,7 @@ ATVC框架支持Broadcast与Elementwise组合的算子通过扩展BroadcastOpTem
 
 下面将以Add算子（Broadcast + Elementwise, 为区别Add单算字，命名为AddWithBroadcast算子）搭建为样例，按照组装顺序介绍组合算子类的开发流程。
 
-### 3.4.2 组合算子开发步骤
+### 组合算子开发步骤
 下面是用户利用Components模板实现自定义算子所需要实现的关键步骤，完整样例见[add_with_broadcast](../examples/add_with_broadcast/add_with_broadcast.cpp) :
 ```cpp
 // AddWithBroadcast算子的描述：两个输入，一个输出，类型均为float
@@ -1165,13 +1165,13 @@ int32_t main(int32_t argc, char* argv[])
 }
 ```
 
-#### 3.4.2.1 实现计算逻辑
-组合计算模板复用已有的Elementwise计算模板（详见[3.1.2章节](#312-elementwise算子开发步骤)）和Broadcast计算模板（参见[3.3.2章节](#332-broadcast算子开发步骤)），具体使用方法和约束参考对应章节。
+#### 实现计算逻辑
+组合计算模板复用已有的Elementwise计算模板（详见[Elementwise算子开发步骤](#elementwise算子开发步骤)）和Broadcast计算模板（参见[Broadcast算子开发步骤](#broadcast算子开发步骤)），具体使用方法和约束参考对应章节。
 
 根据实际的算子诉求，构建1个或2个Elementwise计算模板，与1个Broadcast计算模板，作为模板参数传入`ATVC：：BroadcastOpTemplate`中，并在数据计算以及同步阶段被调用。
 
 存在Broadcast的组合计算模板设计多核之间的数据结果同步以及核内分块的对其计算，用户自定义难度较高，因此ATVC框架提供了Broadcast的内置计算模板，并实现了Broadcast在单核内与多核间的计算与同步等函数接口。
-##### 3.4.2.1.1 实现Elementwise计算模板
+##### 实现Elementwise计算模板
 前置或后置Elementwise计算模板除了需要满足基本计算模板的要求外，还需要定义两个额外接口`SetArgs`和`SetParam`，分别用来接受组合算子的向量参数和标量参数。
 
 以`PostCompute`为例， Elementwise计算模板定义如下：
@@ -1228,10 +1228,10 @@ Elementwise计算模板需要定义三个接口，分别为：
 
 
 
-##### 3.4.2.1.2 实现Broadcast计算模板
+##### 实现Broadcast计算模板
 Broadcast计算模板在组合算子中与Broadcast单算子无任何区别，可直接复用单算子计算模板或使用内置计算模板。
 
-#### 3.4.2.2 实例化模板
+#### 实例化模板
 在ATVC提供了Broadcast内部实现后，用户需要定义封装核函数接口。核函数内部通过`ATVC::Kernel::BroadcastOpTemplate`完成模板实例化。
 Kernel层的自定义API样例如下：
 
@@ -1279,9 +1279,9 @@ __global__ __aicore__ void AddWithBroadcastCustom(GM_ADDR x,
 
 在组合算子中，用户定义的`OpTraits`为组合算子的整体定义，核函数内部根据算子的组合形式，用组合算子的`OpTraits`定义来表达Elementwise和Broadcast算子的`Optraits`定义。例如，Broadcast计算函数的`OpTraits`定义就表示：Broadcast的输入是组合算子的第一个输入，Broadcast算子的输出组合算子的临时资源。
 
-#### 3.4.2.3 Policy与Param的计算与传递
-##### 3.4.2.3.1 CalcBroadcastTiling
-组合类算子的TilingAPI可以复用`ATVC::Host::CalcBroacastTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`Optraits`。具体信息参考[3.3.2.3.1](#33231-calcbroadcasttiling)章节。在计算基本快所需UB空间时，从`PreCompute`和`PostCompute`的`Optraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`Optraits`来计算Tiling，不需要分别传单算子的`Optraits`。
+#### Policy与Param的计算与传递
+##### CalcBroadcastTiling
+组合类算子的TilingAPI可以复用`ATVC::Host::CalcBroacastTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`Optraits`。具体信息参考[CalcBroadcastTiling](#calcbroadcasttiling)章节。在计算基本快所需UB空间时，从`PreCompute`和`PostCompute`的`Optraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`Optraits`来计算Tiling，不需要分别传单算子的`Optraits`。
 
 ```cpp
 // AddWithBroadcast算子的描述：两个输入，一个输出，类型均为float
@@ -1289,11 +1289,11 @@ using BroadcastOpTraits = ATVC::OpTraits<ATVC::OpInputs<float, float>, ATVC::OpO
 ATVC::Host::CalcBroadcastTiling<BroadcastOpTraits>(shapeIn, shapeOut, &policy, &param);
 ```
 
-##### 3.4.2.3.2 BroadcastAdapter
-`BroadcastAdapter`的介绍可参考章节[3.3.2.3.2](#33232-broadcastopadapter)。
+##### BroadcastAdapter
+`BroadcastAdapter`的介绍可参考章节[BroadcastOpAdapter](#broadcastopadapter)。
 
-### 3.4.3 BroadcastOpTemplate模板说明
-Broadcast与Elementwise组合的算子模板以BroadcastOpTemplate为基础进行扩展，`BroadcastOpTemplate`的介绍可以参考章节[3.3.3](#333-broadcast模板说明)。下面为组合算子场景`ATVC::Kernel::BroadcastOpTemplate`新引入的接口或定义，以及调用计算模板函数的示意代码，完整模板定义请参考[`broadcast_op_template.h`](../include/broadcast/kernel/broadcast_op_template.h)：
+### BroadcastOpTemplate模板说明
+Broadcast与Elementwise组合的算子模板以BroadcastOpTemplate为基础进行扩展，`BroadcastOpTemplate`的介绍可以参考章节[Broadcast模板说明](#broadcast模板说明)。下面为组合算子场景`ATVC::Kernel::BroadcastOpTemplate`新引入的接口或定义，以及调用计算模板函数的示意代码，完整模板定义请参考[`broadcast_op_template.h`](../include/broadcast/kernel/broadcast_op_template.h)：
 
 ```cpp
 /*!
@@ -1354,14 +1354,14 @@ class BroadcastOpTemplate {
 };
 ```
 
-## 3.5 Elementwise + ReduceSum组合算子开发
+## Elementwise + ReduceSum组合算子开发
 
 组合算子模板类的模块之间的交互如下（ATVC框架提供的模板及接口用黄色表示；开发自定义的模块用蓝色表示）：
 ![reduce_fusion_dataflow](images/reduce_fusion_dataflow.png)
 
 组合算子模板内部根据计算的数据大小，Shape完成了不同计算调度代码的实现，考虑到ReduceSum的Tiling复杂度，组合算子的计算调度场景复用ReduceSum的调度策略`ATVC::ReducePolicy`。在算子调用阶段，分派策略API可根据Tiling API计算出的`ATVC::ReducePolicy`转化为编译态参数，结合定制的Elementwise和ReduceSum计算模板来实例化`ATVC::Kernel::ReduceOpTemplate`算子模板类。
 
-### 3.5.1 组合模板概述
+### 组合模板概述
 ATVC框架支持ReduceSum与Elementwise组合，组合算子通过扩展ReduceOpTemplate的模板参数对用户提供接口，开发者可以根据算子实际需求来定制组合，框架支持以下组合：Elementwise + ReduceSum、ReduceSum + Elementwise、Elementwise + ReduceSum + Elementwise。下面以ReduceSum与Elementwise组合为例进行详细讲解。
 根据组合算子在框架内部的交互场景，ATVC提供如下的接口及模板类帮助开发搭建自定义ReduceSum与Elementwise组合算子：
 
@@ -1377,7 +1377,7 @@ ATVC框架支持ReduceSum与Elementwise组合，组合算子通过扩展ReduceOp
 
 下面将以Add+ReduceSum+Relu算子（命名为ReluWithReduceSum算子）搭建为样例，按照组装顺序介绍组合算子类的开发流程。
 
-### 3.5.2 组合算子开发步骤
+### 组合算子开发步骤
 下面是用户利用Components模板实现自定义算子所需要实现的关键步骤，完整样例见[relu_with_reduce_sum.cpp](../examples/relu_with_reduce_sum/relu_with_reduce_sum.cpp) :
 ```cpp
 // ReluWithReduceSum算子的描述：一个输入，一个输出，类型均为float
@@ -1398,14 +1398,14 @@ int32_t main(int32_t argc, char* argv[])
     ...
 }
 ```
-#### 3.5.2.1 实现计算逻辑
-组合计算模板复用已有的Elementwise计算模板（详见[3.1.2章节](#312-elementwise算子开发步骤)）和ReduceSum计算模板（参见[3.2.2章节](#322-reduce算子开发步骤)），具体使用方法和约束参考对应章节。
+#### 实现计算逻辑
+组合计算模板复用已有的Elementwise计算模板（详见[Elementwise算子开发步骤](#elementwise算子开发步骤)）和ReduceSum计算模板（参见[Reduce算子开发步骤](#reduce算子开发步骤)），具体使用方法和约束参考对应章节。
 
 根据实际的算子诉求，构建1个或2个Elementwise计算模板，与1个Reduce计算模板，作为模板参数传入`ATVC::ReduceOpTemplate`中，并在数据计算以及同步阶段被调用。
 
 存在ReduceSum的组合计算模板设计多核之间的数据结果同步以及核内分块的对其计算，用户自定义难度较高，因此ATVC框架提供了ReduceSum的内置计算模板，并实现了ReduceSum在单核内与多核间的计算与同步等函数接口。
 
-##### 3.5.2.1.1 实现Elementwise计算模板
+##### 实现Elementwise计算模板
 前置或后置Elementwise计算模板除了需要满足基本计算模板的要求外，还需要定义两个额外接口`SetArgs`和`SetScalar`，分别用来接受组合算子的向量参数和标量参数。
 
 以`PostCompute`为例，Elementwise计算模板定义如下：
@@ -1473,10 +1473,10 @@ Elementwise计算模板需要定义三个接口， 分别为：
 完整实现见[post_compute_relu_with_reduce_sum.h](../examples/relu_with_reduce_sum/post_compute_relu_with_reduce_sum.h)。
 
 
-##### 3.5.2.1.2 实现ReduceSum计算模板
+##### 实现ReduceSum计算模板
 在组合算子中，ReduceSum计算模板与单个ReduceSum算子的计算模板相同，可以直接复用单算子的计算模板或使用内置的计算模板。
 
-#### 3.5.2.2 实例化模板
+#### 实例化模板
 在ATVC提供了Reduce内部实现后，用户需要定义封装核函数接口。核函数内部通过`ATVC::Kernel::ReduceOpTemplate`完成模板实例化。
 Kernel层的自定义API样例如下：
 ```cpp
@@ -1527,9 +1527,9 @@ __global__ __aicore__ void ReluWithReduceSum(GM_ADDR x, GM_ADDR y, ATVC::ReduceP
 ```
 在组合算子中，用户定义的`OpTraits`为组合算子的整体定义，核函数内部根据算子的组合形式，用组合算子的`OpTraits`定义来表达Elementwise和Reduce算子的`Optraits`定义。例如，Reduce计算函数的`OpTraits`定义就表示：Reduce的输入是组合算子的第一个输入，Reduce算子的输出组合算子的临时资源。
 
-#### 3.5.2.3 Policy与Param的计算与传递
-##### 3.5.2.3.1 CalcReduceTiling
-组合类算子的TilingAPI可以复用`ATVC::Host::CalcReduceTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`Optraits`。具体信息参考[3.2.2.3.1](#32231-calcreducetiling)章节。在计算基本快所需UB空间时，从`PreCompute`和`PostCompute`的`Optraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`Optraits`来计算Tiling，不需要分别传单算子的`Optraits`。
+#### Policy与Param的计算与传递
+##### CalcReduceTiling
+组合类算子的TilingAPI可以复用`ATVC::Host::CalcReduceTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`Optraits`。具体信息参考[CalcReduceTiling](#calcreducetiling)章节。在计算基本快所需UB空间时，从`PreCompute`和`PostCompute`的`Optraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`Optraits`来计算Tiling，不需要分别传单算子的`Optraits`。
 
 ```cpp
 // ReluWithReduceSum算子的描述：一个输入，一个输出，类型均为float
@@ -1537,11 +1537,11 @@ using ReduceOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<flo
 ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shapeIn, dim, &policy, &param);
 ```
 
-##### 3.5.2.3.2 ReduceOpAdapter
-`ReduceOpAdapter`的介绍可参考章节[3.2.2.3.2](#32232-reduceopadapter)。
+##### ReduceOpAdapter
+`ReduceOpAdapter`的介绍可参考章节[ReduceOpAdapter](#reduceopadapter)。
 
-### 3.5.3 ReduceOpTemplate模板说明
-Reduce与Elementwise组合的算子模板以ReduceOpTemplate为基础进行扩展,`ReduceOpTemplate`的介绍可以参考章节[3.2.3](#323-reduce模板说明)。下面为组合算子场景`ATVC::Kernel::ReduceOpTemplate`新引入的接口或定义，以及调用计算模板函数的示意代码，完整模板定义请参考[`reduce_op_template.h`](../include/reduce/kernel/reduce_op_template.h)：
+### ReduceOpTemplate模板说明
+Reduce与Elementwise组合的算子模板以ReduceOpTemplate为基础进行扩展,`ReduceOpTemplate`的介绍可以参考章节[Reduce模板说明](#reduce模板说明)。下面为组合算子场景`ATVC::Kernel::ReduceOpTemplate`新引入的接口或定义，以及调用计算模板函数的示意代码，完整模板定义请参考[`reduce_op_template.h`](../include/reduce/kernel/reduce_op_template.h)：
 
 ```cpp
  /*!
@@ -1613,15 +1613,15 @@ public:
 };
 ```
 
-## 3.6 Pool算子开发
-### 3.6.1 Pool模板概述
+## Pool算子开发
+### Pool模板概述
 ATVC框架提供的Pool算子模块之间的交互与ElementWise模板类似，自定义Pool算子需按照以下顺序完成模块之间的组装：
 1. 定义计算模板。
 2. 将计算模板类传入Kernel层算子模板完成核函数功能实现。
 3. 定义Kernel层算子入口API，内部实例化计算模板类。
 
 
-### 3.6.2 Pool算子开发步骤
+### Pool算子开发步骤
 下面将以Edge算子的实现为样例，按照组成Kernel的顺序介绍Pool算子开发的关键步骤进行介绍。通过ATVC框架实现的Edge完整算子样例代码见[样例代码](../examples/edge/edge.cpp)：
 ```cpp
 // 描述算子的输入输出以及临时计算资源
@@ -1698,7 +1698,7 @@ EdgeCustom<PoolOpTraits, totalLayout><<<blockNum, nullptr, stream>>>(xDevice, zD
 ...
 
 ```
-#### 3.6.2.1 实现计算逻辑
+#### 实现计算逻辑
 计算模板是用户必须在Pool算子实现过程中完成的一类特殊模板类的定义。模板类无需关注数据如何从GM搬运到UB，只需重载`operator()`的公有接口，并在该仿函数内部实现`AscendC::LocalTensor`之间的计算逻辑。在Kernel层的组装阶段，计算模板将作为模板参数传入`ATVC::Kernel::PoolOpTemplate`，并在数据计算阶段被调用。下方为计算模板实现计算逻辑的代码样例：
 ```cpp
 #include "atvc.h" // 包含所有模板及API的总入口头文件
@@ -1779,7 +1779,7 @@ struct Edge2C3ComputeFunc {
     ```
 
 
-#### 3.6.2.2 实例化模板
+#### 实例化模板
 
 在Pool算子开发流程中，用户需要自行定义核函数接口。核函数内部通过`ATVC::Kernel::PoolOpTemplate`完成模板实例化。
 
@@ -1803,7 +1803,7 @@ __global__ __aicore__ void EdgeCustom(GM_ADDR a, GM_ADDR c, ATVC::PoolParam para
 2. 核函数内部必须加入`KERNEL_TASK_TYPE_DEFAULT(KERNEL_TYPE_AIV_ONLY);`这段代码标注算子执行时只启动Vector核。
 3. 核函数必须初始化`ATVC::Kernel::PoolOpTemplate`变量并调用它的`Run(Args&&... args)`接口来实现数据的调度运算。
 
-#### 3.6.2.3 Policy与Param的计算与传递
+#### Policy与Param的计算与传递
 ATVC的Host层提供了Pool算子的通用Tiling算法API `ATVC::Host::CalcPoolTiling`，它根据算子计算原型`ATVC::OpTraits`以及数据大小计算出包含`ATVC::PoolTilingData`的运行态参数`ATVC::PoolParam`。`ATVC::PoolParam`在运行时将参与模板算子数据搬运从而实现较优计算。<br>`ATVC::PoolTilingData`和`ATVC::PoolParam`的数据结构定义如下：
 ```cpp
 namespace ATVC{
@@ -1836,7 +1836,7 @@ struct PoolParam {
     };
 ```
 
-### 3.6.3 Pool模板说明
+### Pool模板说明
 `ATVC::Kernel::PoolOpTemplate`为ATVC框架提供的内置Pool基本算子类，它实现了一套算子数据的搬运搬出、资源分配和释放的算子流程。它需要计算模板类作为模板参数传入来完成实例化。核函数通过调用它完成整套计算逻辑：1. 资源初始化; 2.将数据从GM搬运至UB; 3.按`OpTraits`的输入、输出、临时资源描述、其他标量的顺序传入计算模板类的仿函数完成数据的基块计算; 4.将结果从UB搬出至GM。
 
 下方为`ATVC::Kernel::PoolOpTemplate`模板类的外部接口介绍，完整模板类定义请参考[`pool_template头文件`](../include/pool/kernel/pool_op_template.h)。
@@ -1854,7 +1854,7 @@ public:
 在`PoolOpTemplate`类的Run接口中，实现了按照切分块进行轮询拷贝数据到UB上进行计算，实际拷贝的数据是根据`PoolCompute::TILE_PADDING`对切分块进行外扩的，计算完成后，将非外扩的实际计算结果数据拷贝到输出的GM内存上。
 
 
-### 3.6.4 切分策略算法说明
+### 切分策略算法说明
 这里简单介绍下`ATVC::Host::CalcPoolTiling`函数内部计算Tiling参数的步骤，详细代码请参考[Pool Tiling 算法](../include/pool/host/pool_host.h)。 
 
 - 计算基本块：根据输入的总的layout和切分的tile块layout信息，计算全部切分tile块的个数。
@@ -1862,9 +1862,9 @@ public:
 - 按照均匀分配的策略，计算每个核需要处理的tile块，计算需要多处理一次的核数，计算每个核的平均计算元素量等信息。
 
 
-# 4 ATVC的调试调优功能
+# ATVC的调试调优功能
 为了用户在使用ATVC进行算子开发时能快速进行精度调试和性能调优，ATVC支持多种调试调优能力。
-## 4.1 OpTraits校验接口
+## OpTraits校验接口
 用户可通过`DebugCheck()`接口校验不同模板的OpTraits功能, 接口在Host侧调用，无需额外的开关限制,接口定义如下：
 ```cpp
 namespace ATVC {
@@ -1897,13 +1897,13 @@ using AddOpTraits = ATVC::OpTraits<ATVC::OpInputs<float, float>, ATVC::OpOutputs
 ATVC::Host::DebugCheck<AddOpTraits, ATVC::TemplateType::ELE_WISE>();
 ```
 完整的`DebugCheck`调用接口样例可参考tanh_grad算子[样例代码](../examples/tanh_grad/tanh_grad.cpp)。
-## 4.2 使用调试调优模式运行算子
+## 使用调试调优模式运行算子
 样例执行脚本run_examples.sh支持可选入参`--run-mode`进行不同调试调优运行模式的选择。
 当前支持`debug_print`和`profiling`两种模式。
 - `--run-mode=debug_print`：DFX信息打印模式，打开kernel侧的模板内置关键节点的信息打印和异常退出时的打印功能。
 - `--run-mode=profiling`：Profiling性能采集模式，运行时打开profiling性能数据采集功能。
 - 未设置`--run-mode`：默认模式，正常上板，无kernel侧的dfx信息打印， 未开启profiling性能采集功能。
-### 4.2.1 DFX信息打印模式
+### DFX信息打印模式
 通过运行run_examples.sh脚本时加上可选参数`--run-mode=debug_print`打开本功能。
 DFX信息打印格式按照 [日志级别(`ERROR`/`INFO`)]:[`ATVC`][`Module`] (可选：[`CopyIn`/`CopyOut`等]) 的标准进行打印。
 - 日志级别： ERROR是异常打印信息，INFO是模板内部重要信息打印。
@@ -1924,7 +1924,7 @@ ATVC::Kernel::DebugPrintf("[ERROR]: [ATVC][EleWise] Input Count can not be 0!\n"
 ATVC::Kernel::DebugPrintf("[INFO]: [ATVC][EleWise][CopyIn] Offset is %u, copy count is %u.\n", curCoreStartCnt_ + offsetCnt_, calcCnt_);
 ```
 
-### 4.2.2 开启Profiling性能调优功能
+### 开启Profiling性能调优功能
 通过运行run_examples.sh脚本时加上可选参数`--run-mode=profiling`打开本功能。
 为了增加Profiling采集性能数据的稳定性，建议用户在开启profiling时，运行时重复多次调用kernel，可实现一次性采集多次上板的性能数据，消除抖动。
 ```cpp
@@ -1937,16 +1937,16 @@ TanhGrad<AddOpTraits><<<blockNum, nullptr, stream>>>(dyDevice, yDevice, zDevice,
 ```
 其中`ATVC_DEBUG_MODE`是`run-mode`在不同的模式下的内部宏定义的映射。`ATVC_DEBUG_MODE == 2`是`--run-mode=profiling`的内部映射，用户无需关注。
 
-## 4.3 Tiling超参调优
-### 4.3.1 Elementwise模板算子Tiling超参调优
-#### 4.3.1.1  Elementwise模板通用Tiling算法
+## Tiling超参调优
+### Elementwise模板算子Tiling超参调优
+#### Elementwise模板通用Tiling算法
 - 计算`blockNum`：计算`blockNum` = 总的元素量(`totalCnt`) / 单核数据量基线(`singleCoreBaseLine`), `blockNum`最小值为1， 最大值为平台提供的最大`vectorCore`值。
 - 计算达到UB上限的单核单输入元素个数值`ubLimitCnt`：UB上限内存大小 / 所有输入输出及temp单个元素的内存之和。
 - 计算`tiledCnt`：
     - 计算每个核需要处理的数据元素量`avgElePerBlock = totalCnt / blockNum`。
     - 根据`avgElePerBlock`所处的`splitDataShape`数据段，按照切分系数去切分基本块： `tiledCnt = avgElePerBlock / dataSplitFactor[i]`。
     - `tiledCnt`调整： 不超上限`ubLimitCnt`， 不小于下限32，且最后的`tiledCnt`要做32元素对齐。
-#### 4.3.1.2 Elementwise TilingData定义
+#### Elementwise TilingData定义
 Elementwise模板通用Tiling切分的数据结构为EleWiseTilingData，描述了核间切分和单核内切分的策略，其定义如下：
 ```cpp
 namespace ATVC {
@@ -1960,7 +1960,7 @@ struct EleWiseTilingData {
 }
 ```
 
-#### 4.3.1.3 Elementwise Tiling超参调优
+#### Elementwise Tiling超参调优
 当前提供的Elementwise模板内置通用Tiling可调超参如下所示：
 | Tiling超参名     | 数据类型  |  参数说明   |  调节范围 |  默认值 |
 | ----------- | -------------- | ----------- | ----------- |---|
@@ -2012,11 +2012,11 @@ bool CalcEleWiseTiling(int32_t totalCnt, ATVC::EleWiseParam &param,
         return -1;
     };
 ```
-### 4.3.2 Reduce模板算子Tiling超参调优
-#### 4.3.2.1 Reduce Tiling通用算法
+### Reduce模板算子Tiling超参调优
+#### Reduce Tiling通用算法
 Reduce Tiling计算流程较为复杂，简化后的主要流程如下：
 <img src="./images/reduce_tiling.png" width="70%" height="70%" style="margin: 30px 0;"><br>
-#### 4.3.2.2 Reduce TilingData定义
+#### Reduce TilingData定义
 ATVC host 和kernel侧都会使用到的`ReduceTilingData`是Reduce的核间AR轴切分、单核内AR轴切分的策略，其定义如下：
 ```cpp
 namespace ATVC {
@@ -2040,7 +2040,7 @@ struct ReduceTilingData {
 };
 }
 ```
-#### 4.3.2.3 Reduce 超参调优
+#### Reduce 超参调优
 可调参数如下所示：
 | Tiling超参名     | 数据类型  |  参数说明   |  调节范围 |  默认值 |
 | ----------- | -------------- | ----------- | ----------- |---|
