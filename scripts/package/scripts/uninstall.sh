@@ -89,7 +89,7 @@ log() {
 new_echo() {
     local log_type="$1"
     local log_msg="$2"
-    if [ "${is_quiet}" = "n" ]; then
+    if [ "${IS_QUIET}" = "n" ]; then
         echo "${log_type}" "${log_msg}" 1> /dev/null
     fi
 }
