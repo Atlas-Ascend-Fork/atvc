@@ -139,6 +139,41 @@ TEST_F(TestAtvcTiling, TestAtvcTilingReduceNoAxesCase)
     EXPECT_EQ(param.tilingData.shape[0], 1U);
 }
 
+TEST_F(TestAtvcTiling, TestAtvcTilingReduceSumUnsortedAxesCase)
+{
+    using ReduceOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>>;
+    std::vector<int64_t> shape = {2, 3, 4, 5, 6, 7, 8};
+    ATVC::ReduceParam paramSorted{};
+    ATVC::ReduceParam paramUnsorted{};
+    ATVC::ReducePolicy policySorted = {-1, -1, -1};
+    ATVC::ReducePolicy policyUnsorted = {-1, -1, -1};
+
+    // The same axis set {0, 3, 4, 6} in different input orders must produce identical tiling.
+    auto retSorted = ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shape, {0, 3, 4, 6}, &policySorted, &paramSorted);
+    auto retUnsorted =
+        ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shape, {4, 3, 6, 0}, &policyUnsorted, &paramUnsorted);
+    EXPECT_EQ(retSorted, true);
+    EXPECT_EQ(retUnsorted, true);
+
+    // Policy fields must match.
+    EXPECT_EQ(policySorted.patternID, policyUnsorted.patternID);
+    EXPECT_EQ(policySorted.loopARCount, policyUnsorted.loopARCount);
+    EXPECT_EQ(policySorted.loopInnerARCount, policyUnsorted.loopInnerARCount);
+
+    // Workspace size and scalar tiling fields must match.
+    EXPECT_EQ(paramSorted.workspaceSize, paramUnsorted.workspaceSize);
+    EXPECT_EQ(paramSorted.tilingData.outSize, paramUnsorted.tilingData.outSize);
+    EXPECT_EQ(paramSorted.tilingData.meanVar, paramUnsorted.tilingData.meanVar);
+    EXPECT_EQ(paramSorted.tilingData.groupR, paramUnsorted.tilingData.groupR);
+
+    // All shape/stride slots must match (trailing slots are zero-padded).
+    for (size_t i = 0; i < ATVC::MAX_DIM; i++) {
+        EXPECT_EQ(paramSorted.tilingData.shape[i], paramUnsorted.tilingData.shape[i]);
+        EXPECT_EQ(paramSorted.tilingData.stride[i], paramUnsorted.tilingData.stride[i]);
+        EXPECT_EQ(paramSorted.tilingData.dstStride[i], paramUnsorted.tilingData.dstStride[i]);
+    }
+}
+
 TEST_F(TestAtvcTiling, TestAtvcTilingReduceSumHyperParamError)
 {
     using ReduceOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>>;
