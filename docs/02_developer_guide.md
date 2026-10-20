@@ -1168,7 +1168,7 @@ int32_t main(int32_t argc, char* argv[])
 #### 实现计算逻辑
 组合计算模板复用已有的Elementwise计算模板（详见[Elementwise算子开发步骤](#elementwise算子开发步骤)）和Broadcast计算模板（参见[Broadcast算子开发步骤](#broadcast算子开发步骤)），具体使用方法和约束参考对应章节。
 
-根据实际的算子诉求，构建1个或2个Elementwise计算模板，与1个Broadcast计算模板，作为模板参数传入`ATVC：：BroadcastOpTemplate`中，并在数据计算以及同步阶段被调用。
+根据实际的算子诉求，构建1个或2个Elementwise计算模板，与1个Broadcast计算模板，作为模板参数传入`ATVC::BroadcastOpTemplate`中，并在数据计算以及同步阶段被调用。
 
 存在Broadcast的组合计算模板设计多核之间的数据结果同步以及核内分块的对其计算，用户自定义难度较高，因此ATVC框架提供了Broadcast的内置计算模板，并实现了Broadcast在单核内与多核间的计算与同步等函数接口。
 ##### 实现Elementwise计算模板
