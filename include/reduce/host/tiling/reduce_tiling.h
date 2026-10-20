@@ -63,6 +63,9 @@ public:
         if (IsAxesValid(opInput_.reduceShape, opInput_.reduceDim) == -1) {
             return -1;
         }
+        // EliminateOne/MergeAxis assume ascending axis indices; sort the normalized axes so
+        // that the same axis set produces identical tiling regardless of input order.
+        std::sort(opInput_.reduceDim.begin(), opInput_.reduceDim.end());
         std::vector<uint64_t> newShape(ATVC::MAX_DIM, 1);
         int32_t newShapeSize = 0;
         EliminateOne(opInput_.reduceShape, opInput_.reduceDim, newShape, newShapeSize);
