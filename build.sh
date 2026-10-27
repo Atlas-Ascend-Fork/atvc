@@ -90,7 +90,7 @@ check_option_validity() {
 
 dotted_line="----------------------------------------------------------------"
 export BASE_PATH=$(
-  cd "$(dirname $0)"
+  cd "$(dirname "$0")"
   pwd
 )
 export BUILD_PATH="${BASE_PATH}/build"
@@ -306,7 +306,7 @@ checkopts() {
         cov) ENABLE_COVERAGE=TRUE ;;
         noexec) ENABLE_UT_EXEC=FALSE ;;
         pkg) ENABLE_PACKAGE=TRUE ;;
-        cann_3rd_lib_path=*) CANN_3RD_LIB_PATH="$(realpath ${OPTARG#*=})" ;;
+        cann_3rd_lib_path=*) CANN_3RD_LIB_PATH="$(realpath "${OPTARG#*=}")" ;;
         asan) ENABLE_ASAN=TRUE ;;
         run_example) ENABLE_RUN_EXAMPLE=TRUE ;;
         build-type=*) BUILD_TYPE="${OPTARG#build-type=}" ;;
@@ -344,7 +344,7 @@ assemble_cmake_args() {
       echo "This environment does not have the ASAN library, no need enable ASAN"
       ENABLE_ASAN=FALSE
     else
-      $(rm -f asan_test)
+      rm -f asan_test
       CMAKE_ARGS="$CMAKE_ARGS -DENABLE_ASAN=TRUE"
     fi
     set -e
@@ -358,13 +358,13 @@ assemble_cmake_args() {
 
 clean_build() {
   if [ -d "${BUILD_PATH}" ]; then
-    rm -rf ${BUILD_PATH}/*
+    rm -rf "${BUILD_PATH}"/*
   fi
 }
 
 clean_build_out() {
   if [ -d "${BUILD_OUT_PATH}" ]; then
-    rm -rf ${BUILD_OUT_PATH}/*
+    rm -rf "${BUILD_OUT_PATH}"/*
   fi
 }
 
@@ -424,7 +424,7 @@ build_example() {
 
   if [[ -n "${ASCEND_HOME_PATH}" ]]; then
     echo "env exists ASCEND_HOME_PATH : ${ASCEND_HOME_PATH}"
-    export PATH=${ASCEND_HOME_PATH}/${ARCH_INFO}-linux/ascc/:$PATH
+    export PATH="${ASCEND_HOME_PATH}/${ARCH_INFO}-linux/ascc/:${PATH}"
     env| grep PATH
   elif [[ $EUID -eq 0 ]]; then
     if [[ -d "/usr/local/Ascend/ascend-toolkit/cann" ]]; then
@@ -451,7 +451,7 @@ build_example() {
     export ASCEND_PROCESS_LOG_PATH="${example_dir}/log"
     export ASCEND_SLOG_PRINT_TO_STDOUT=0
     export ASCEND_GLOBAL_LOG_LEVEL=3
-    cd "${example_dir}" || { echo "Failed to enter directory ${UT_PATH}"; exit 1; }
+    cd "${example_dir}" || { echo "Failed to enter directory ${example_dir}"; exit 1; }
     output_dir="${example_dir}/output"
     if [[ -d "${output_dir}" ]]; then
       rm -rf "${output_dir}"
