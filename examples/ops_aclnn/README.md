@@ -64,7 +64,7 @@ ops_aclnn/
     ElementWise类，参考[add_custom.cpp](./add/AddCustom/op_host/add_custom.cpp)
     ```cpp
       // 引入头文件
-      #include "elewise/elewise_host.h"
+      #include "elewise/host/elewise_host.h"
       ...      
       //定义算子描述
       using AddOpTraitsFloat = ATVC::OpTraits<ATVC::OpInputs<float, float>, ATVC::OpOutputs<float>>;
@@ -93,7 +93,7 @@ ops_aclnn/
    
     Broadcast类
     ```cpp
-      #include "broadcast/broadcast_host.h"
+      #include "broadcast/host/broadcast_host.h"
       // 定义算子描述
       using BroadcastOpTraitsFloat = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>>;
       using BroadcastOpTraitsInt = ATVC::OpTraits<ATVC::OpInputs<int32_t>, ATVC::OpOutputs<int32_t>>;
@@ -133,7 +133,7 @@ ops_aclnn/
     reduce_sum类，参考[reduce_sum_custom.cpp](./reduce_sum/ReduceSumCustom/op_host/reduce_sum_custom.cpp)
     ```cpp
       // 引入头文件
-      #include "reduce/reduce_host.h"
+      #include "reduce/host/reduce_host.h"
       // 定义算子描述
       using ReduceOpTraitsFloat = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>>;
       using ReduceOpTraitsInt = ATVC::OpTraits<ATVC::OpInputs<int32_t>, ATVC::OpOutputs<int32_t>>;
@@ -173,7 +173,7 @@ ops_aclnn/
     ElementWise类[add_custom.cpp](./add/AddCustom/op_kernel/add_custom.cpp)
     ```cpp
       // 头文件引入
-      #include "elewise/elewise_device.h"
+      #include "elewise/kernel/elewise_kernel.h"
       ...
       // 定义算子描述
       using AddOpTraits = ATVC::OpTraits<ATVC::OpInputs<DTYPE_X, DTYPE_Y>, ATVC::OpOutputs<DTYPE_Z>>;
@@ -207,7 +207,7 @@ ops_aclnn/
     Broadcast类
     ```cpp
       // 头文件引入
-      #include "broadcast/broadcast_device.h"
+      #include "broadcast/kernel/broadcast_kernel.h"
       // 定义算子描述
       using BroadcastOpTraits = ATVC::OpTraits<ATVC::OpInputs<DTYPE_X>, ATVC::OpOutputs<DTYPE_Y>>;
       ...
@@ -228,7 +228,7 @@ ops_aclnn/
     reduce_sum类[reduce_sum_custom.cpp](./reduce_sum/ReduceSumCustom/op_kernel/reduce_sum_custom.cpp)
     ```cpp
       // 头文件引入
-      #include "reduce/reduce_device.h"
+      #include "reduce/kernel/reduce_kernel.h"
       // 定义算子描述
       using ReduceOpTraits = ATVC::OpTraits<ATVC::OpInputs<DTYPE_X>, ATVC::OpOutputs<DTYPE_Y>>;
       ...

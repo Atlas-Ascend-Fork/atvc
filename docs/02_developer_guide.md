@@ -50,7 +50,7 @@ ATVC将Vector算子开发流程中的可定制化模块抽象出了Host层和Ker
 Elementwise类算子通常是指对张量进行元素级别的操作的函数或方法，包括但不限于加、减、乘、除及指数、对数、三角函数等数学函数。这类算子的特点是会逐元素进行计算操作，而不会改变输入数据的形状。常见的Elementwise算子有Add、Sub、Exp、Log、Sin、Sqrt等。
 
 - Reduce类算子  
-Reduce类算子通常是指对张量中的元素进行归约操作的算子，通常用来求和、求平均值等操作，可指定某几个维度进行归约计算，也可以将所有元素归约计算为一个标量。常见的Reduce类算子有ReduceSum（求和）、ReduceMean（求平均值）、ReduceProdcut（累乘）、ReduceMax（求最大值）、ReduceMin（求最小值）、ReduceAny（or操作）、ReduceAll（and操作）。
+Reduce类算子通常是指对张量中的元素进行归约操作的算子，通常用来求和、求平均值等操作，可指定某几个维度进行归约计算，也可以将所有元素归约计算为一个标量。常见的Reduce类算子有ReduceSum（求和）、ReduceMean（求平均值）、ReduceProduct（累乘）、ReduceMax（求最大值）、ReduceMin（求最小值）、ReduceAny（or操作）、ReduceAll（and操作）。
 
 - Broadcast类算子  
 Broadcast算子用于在张量形状不一致时实现张量间的逐元素运算。
@@ -125,7 +125,7 @@ ATVC框架提供了`ATVC::EleWiseParam`、`ATVC::ReduceParam`、`ATVC::Broadcast
 以下为ElementWise类算子的`ATVC::EleWiseParam`参与计算的伪代码，详细使用流程请参考本文档的 [Policy与Param的计算与传递](#policy与param的计算与传递)：
 ```cpp
 // 声明运行态参数param
-ATVC::ElewiseParam param;
+ATVC::EleWiseParam param;
 // totalCnt描述EleWise单输入的元素个数
 int32_t totalCnt = 1024; 
 // OpTraits为算子描述原型，CalcEleWiseTiling根据实际元素计算Tiling策略并将结果写入param
@@ -468,7 +468,7 @@ int32_t main(int32_t argc, char* argv[])
 #### 实现计算逻辑
 Reduce类的计算模板涉及多核之间的数据结果同步以及核内分块的对齐计算，用户自定义难度较高，因此ATVC框架提供了Reduce类的内置计算模板，并实现了Reduce在单核内与多核间的计算与同步等函数接口。
 这类计算模板将作为模板参数传入`ATVC::ReduceOpTemplate`中，并在数据计算以及同步阶段被调用。
-下方为ATVC框架内置的`ATVC::ReduceSumCompute`计算模板的伪代码介绍，完整代码定义请参考[reduce_sum.h](../include/reduce/kernel/reduce_sum_compute.h)。
+下方为ATVC框架内置的`ATVC::ReduceSumCompute`计算模板的伪代码介绍，完整代码定义请参考[reduce_sum_compute.h](../include/reduce/kernel/reduce_sum_compute.h)。
 ```cpp
 #ifndef ATVC_REDUCE_SUM_COMPUTE_H
 #define ATVC_REDUCE_SUM_COMPUTE_H
@@ -658,7 +658,7 @@ int32_t main(int32_t argc, char* argv[])
     std::vector<int64_t> shape{8, 1024};
     ATVC::ReduceParam param;
     ATVC::ReducePolicy policy = {-1, -1, -1};
-    if (!ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shape, dim, &param, &policy)) {
+    if (!ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shape, dim, &policy, &param)) {
         printf("Reduce tiling error.");
         return -1;
     };
@@ -1281,7 +1281,7 @@ __global__ __aicore__ void AddWithBroadcastCustom(GM_ADDR x,
 
 #### Policy与Param的计算与传递
 ##### CalcBroadcastTiling
-组合类算子的TilingAPI可以复用`ATVC::Host::CalcBroacastTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`Optraits`。具体信息参考[CalcBroadcastTiling](#calcbroadcasttiling)章节。在计算基本快所需UB空间时，从`PreCompute`和`PostCompute`的`Optraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`Optraits`来计算Tiling，不需要分别传单算子的`Optraits`。
+组合类算子的TilingAPI可以复用`ATVC::Host::CalcBroadcastTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`OpTraits`。具体信息参考[CalcBroadcastTiling](#calcbroadcasttiling)章节。在计算基本快所需UB空间时，从`PreCompute`和`PostCompute`的`Optraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`Optraits`来计算Tiling，不需要分别传单算子的`Optraits`。
 
 ```cpp
 // AddWithBroadcast算子的描述：两个输入，一个输出，类型均为float
