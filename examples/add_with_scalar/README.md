@@ -30,12 +30,12 @@ $$
 
 <tr><td rowspan="4" align="center">算子输入</td></tr>
 <tr><td align="center">name</td><td align="center">shape</td><td align="center">data type</td><td align="center">format</td></tr>
-<tr><td align="center">a</td><td align="center">8 * 2048</td><td align="center">float</td><td align="center">ND</td></tr>
-<tr><td align="center">b</td><td align="center">8 * 2048</td><td align="center">float</td><td align="center">ND</td></tr>
+<tr><td align="center">a</td><td align="center">8 * 1024</td><td align="center">float</td><td align="center">ND</td></tr>
+<tr><td align="center">b</td><td align="center">8 * 1024</td><td align="center">float</td><td align="center">ND</td></tr>
 <tr></tr>
 
 <tr><td rowspan="2" align="center">算子输出</td></tr>
-<tr><td align="center">c</td><td align="center">8 * 2048</td><td align="center">float</td><td align="center">ND</td></tr>
+<tr><td align="center">c</td><td align="center">8 * 1024</td><td align="center">float</td><td align="center">ND</td></tr>
 
 <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">AddCustom</td></tr>
 </table>

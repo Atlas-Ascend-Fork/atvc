@@ -624,7 +624,7 @@ struct ReduceTilingData {
 
 struct ReduceParam {
     uint64_t workspaceAddr; // device侧的申请空间地址
-    uint32_t workspaceSize = 0; // tiling侧需要申请的工作空间大小,单位比特
+    uint32_t workspaceSize = 0; // tiling侧需要申请的工作空间大小,单位字节
     ReduceTilingData tilingData; // 影响数据搬运的相关参数
     uint32_t nBufferNum = 2; // 每个Queue中的Tensor数量
 };
@@ -942,7 +942,7 @@ struct BroadcastOpTilingData {
 
 struct BroadcastParam {
     uint64_t workspaceAddr;             // device侧的申请空间地址
-    uint32_t workspaceSize = 0;          // tiling计算出来的kernel计算所需的工作空间大小,单位比特
+    uint32_t workspaceSize = 0;          // tiling计算出来的kernel计算所需的工作空间大小,单位字节
     BroadcastOpTilingData tilingData;    // 数据切分策略的相关参数
     int32_t nBufferNum = 2;              // 并行流水数
 };
@@ -1001,10 +1001,19 @@ int32_t main(int32_t argc, char* argv[])
 ```
 ##### BroadcastOpAdapter
 在调用CalcBroadcastTiling接口获取动态参数`ATVC::BroadcastPolicy`后，仍需要在Kernel直调阶段将其转化为编译态参数来实例化`BroadcastOpTemplate`模板完成调用。ATVC框架对`ATVC::BroadcastPolicy`这特殊的模板参数提供了一套运行态参数转编译态参数的策略分派机制`BroadcastOpAdapter`，它将框架`CalcBroadcastTiling`的计算得到的输出作为输入，替用户完成`ATVC::BroadcastParam`资源的申请及释放的同时，将运行态的`ATVC::BroadcastPolicy`参数转化为模板参数完成自定义核函数的策略选择调用。
-基于[实例化模板](#实例化模板)章节中核函数的接口定义，这里只给出`BroadcastOpAdapter`的示范代码，用户亦可根据实际计算场景替换其中的核函数调用：
+基于[实例化模板](#实例化模板)章节中核函数的接口定义，这里只给出`BroadcastOpAdapter`的示范代码，用户亦可根据实际计算场景替换其中的核函数调用。组合算子场景（如AddWithBroadcast）输出为独立的第三个tensor，可通过增加一个三tensor重载实现：
 
 ```cpp
-// 负责Broadcast类算子的调度，选择对应的Policy最佳策略并执行Kernel函数
+// 组合算子场景的三tensor重载（如 z = broadcast(x) + y），负责Broadcast类算子的调度
+template <class OpTraits>
+void BroadcastOpAdapter(uint8_t* x, uint8_t* y, uint8_t* z, ATVC::BroadcastParam &param, ATVC::BroadcastPolicy &policy, aclrtStream& stream)
+{
+    // 实现方式与两tensor版本一致，核函数调用改为传入三个GM地址：
+    // BroadcastCustom<OpTraits, ATVC::BROADCAST_POLICY0><<<param.tilingData.coreNum, nullptr, stream>>>(x, y, z, paramDevice);
+    // ...
+}
+
+// 单算子场景的两tensor版本，负责Broadcast类算子的调度，选择对应的Policy最佳策略并执行Kernel函数
 template <class OpTraits>
 void BroadcastOpAdapter(uint8_t* x, uint8_t* y, ATVC::BroadcastParam &param, ATVC::BroadcastPolicy &policy, aclrtStream& stream)
 {
@@ -1160,7 +1169,7 @@ int32_t main(int32_t argc, char* argv[])
         return -1;
     };
     // 调用Adapter调度接口，完成核函数的模板调用
-    BroadcastOpAdapter<BroadcastOpTraits>(xDevice, yDevice, zDevice, param, policy);
+    BroadcastOpAdapter<BroadcastOpTraits>(xDevice, yDevice, zDevice, param, policy, stream);
     ...
 }
 ```

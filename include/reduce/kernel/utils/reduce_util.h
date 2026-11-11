@@ -81,7 +81,7 @@ __aicore__ inline bool CheckReduceParam(const T* param)
         return false;
     }
     if (tilingData->basicBlock % ATVC::UB_ALIGN_32 != 0) {
-        ATVC::Kernel::DebugPrintf("[ERROR]: [ATVC][Reduce] Tiling data[basicBlock = %lu] is invalid, it must be divisible by 32.\n", tilingData->coreNum);
+        ATVC::Kernel::DebugPrintf("[ERROR]: [ATVC][Reduce] Tiling data[basicBlock = %lu] is invalid, it must be divisible by 32.\n", tilingData->basicBlock);
         return false;
     }
     return true;

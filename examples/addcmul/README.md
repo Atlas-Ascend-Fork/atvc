@@ -24,13 +24,13 @@
 
 <tr><td rowspan="5" align="center">算子输入</td></tr>
 <tr><td align="center">name</td><td align="center">shape</td><td align="center">data type</td><td align="center">format</td></tr>
-<tr><td align="center">input</td><td align="center">8 * 2048</td><td align="center">float</td><td align="center">ND</td></tr>
-<tr><td align="center">tensor1</td><td align="center">1 * 2048</td><td align="center">float</td><td align="center">ND</td></tr>
-<tr><td align="center">tensor2</td><td align="center">1 * 2048</td><td align="center">float</td><td align="center">ND</td></tr>
+<tr><td align="center">input</td><td align="center">8 * 8</td><td align="center">float</td><td align="center">ND</td></tr>
+<tr><td align="center">tensor1</td><td align="center">1 * 8</td><td align="center">float</td><td align="center">ND</td></tr>
+<tr><td align="center">tensor2</td><td align="center">1 * 8</td><td align="center">float</td><td align="center">ND</td></tr>
 <tr></tr>
 
 <tr><td rowspan="2" align="center">算子输出</td></tr>
-<tr><td align="center">output</td><td align="center">8 * 2048</td><td align="center">float</td><td align="center">ND</td></tr>
+<tr><td align="center">output</td><td align="center">8 * 8</td><td align="center">float</td><td align="center">ND</td></tr>
 
 <tr><td rowspan="1" align="center">核函数名</td><td colspan="4" align="center">AddcmulCustom</td></tr>
 </table>
