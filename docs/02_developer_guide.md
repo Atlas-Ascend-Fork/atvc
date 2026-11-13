@@ -181,7 +181,7 @@ ATVC框架提供的Elementwise算子模块之间的交互如下（ATVC框架提�
 
 
 ### Elementwise算子开发步骤
-下面将以Sinh算子 $y = \frac{\exp(x) - \exp(-x)}{2}$ 的实现为样例，按照组成Kernel的顺序介绍Elementwise算子开发的关键步骤进行介绍。通过ATVC框架实现的完整SinhCustom算子样例代码见[样例代码](../examples/sinh_custom/sinh_custom.cpp)：
+下面将以Sinh算子 $y = \frac{\exp(x) - \exp(-x)}{2}$ 的实现为样例，按照组成Kernel的顺序介绍Elementwise算子开发的关键步骤。通过ATVC框架实现的完整SinhCustom算子样例代码见[样例代码](../examples/sinh_custom/sinh_custom.cpp)：
 ```cpp
 // 描述算子的输入输出以及临时计算资源
 using SinhOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>, ATVC::OpTemps<float, float>>;
@@ -433,8 +433,8 @@ Reduce模板算子内部根据计算的数据大小、Shape、Reduce axis轴完�
 using ReduceOpTraits =  ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>>;
 /*
  * 该函数为ReduceCustom算子核函数入口
- * x                 Device上的gm地址，指向Add算子第一个输入
- * y                 Device上的gm地址，指向Add算子第一个输出
+ * x                 Device上的gm地址，指向ReduceCustom算子第一个输入
+ * y                 Device上的gm地址，指向ReduceCustom算子第一个输出
  * reduceParam       指向运行态ATVC::ReduceParam数据
 */
 template<typename Traits, const auto& Policy>
@@ -453,7 +453,7 @@ int32_t main(int32_t argc, char* argv[])
     ATVC::Host::ReduceTilingHyperParam hyperParam;
     hyperParam.maxInnerA = 256;// 设置maxInnerA为256
     // Host侧调用Tiling API完成相关运行态参数的运算
-    if (!ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shape, dim, &policy, &param, hyperParam=hyperParam)) {
+    if (!ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shape, dim, &policy, &param, hyperParam)) {
         printf("Reduce tiling error.\n");
         return -1;
     };
@@ -561,7 +561,7 @@ public:
 ```
 Reduce计算模板类将在数据计算阶段被`ReduceOpTemplate`算子模板调用，因此Reduce计算模板类的实现必须遵从以下约束：
 
-- 该模板类在实例化时固定传入`ATVC::OpTraits`类型的结构体作为模板参数，如`ATVC::OpTraits<ATVC::OpInputs<float>,ATVC::OpOutputs<float>`。
+- 该模板类在实例化时固定传入`ATVC::OpTraits`类型的结构体作为模板参数，如`ATVC::OpTraits<ATVC::OpInputs<float>,ATVC::OpOutputs<float>>`。
 - 开发必须完成以下公有API的内部实现：
     1. 计算单数据基块的Reduce结果 `__aicore__ inline void Compute(...)`。
     2. 计算单UB内不同数据基块的计算结果 `__aicore__ inline void UpdateCache(...)`。
@@ -601,7 +601,7 @@ Reduce算子开发场景下，核函数定义必须遵从以下约束：
 #### Policy与Param的计算与传递
 ##### CalcReduceTiling
 `ATVC::Host::CalcReduceTiling`是ATVC在Host侧提供的针对Reduce类算子的通用Tiling API，它以算子计算模板`ATVC::OpTraits`作为模板参数，根据实际计算场景得出`ATVC::ReduceParam`以及对应算子模板实现的`ATVC::ReducePolicy`。
-`ATVC::ReduceParam`用于保存Reduce数据计算搬运的，`ATVC::ReduceTilingData`以及临时空间的资源变量，它们的数据结构定义如下：
+`ATVC::ReduceParam`用于保存Reduce数据计算搬运的`ATVC::ReduceTilingData`以及临时空间的资源变量，它们的数据结构定义如下：
 
 ```cpp
 //指导Reduce算子内部的数据调度
@@ -881,7 +881,7 @@ Broadcast计算模板类将在数据计算阶段被`BroadcastOpTemplate`算子�
     * AB场景的计算：输入`src`是一个Shape为(dimA, 1)的Tensor，需要将数据扩充到`dst`上，dst的Shape是(dimA, dimB)。
     * BA场景的计算：输入`src`是一个Shape为(1, dimA)的Tensor，需要将src数据扩充到`dst`上，dst的Shape是(dimB, dimA)。
 
-- 该模板类在实例化时固定传入`ATVC::OpTraits`类型的结构体作为模板参数，如`ATVC::OpTraits<ATVC::OpInputs<float>,ATVC::OpOutputs<float>`。
+- 该模板类在实例化时固定传入`ATVC::OpTraits`类型的结构体作为模板参数，如`ATVC::OpTraits<ATVC::OpInputs<float>,ATVC::OpOutputs<float>>`。
 
 #### 实例化模板
 在ATVC提供了Broadcast内部实现后，用户需要定义封装核函数接口。核函数内部通过`ATVC::Kernel::BroadcastOpTemplate`完成模板实例化。
@@ -916,7 +916,7 @@ Broadcast算子开发场景下，核函数定义必须遵从以下约束：
 
 #### Policy与Param的计算与传递
 ##### CalcBroadcastTiling
-`ATVC::Host::CalcBroadcastTiling`是ATVC在Host侧提供的针对Broadcast类算子的通用Tiling API，它以`ATVC::OpTraits`作为模板参数，根据实际输入输出Shape计算出对应算子模板需要的静态编译参数`ATVC::BroadcastPolicy`<br>和动态参数`ATVC::BroadcastParam`，其中`ATVC::BroadcastParam`包含了数据计算搬运的`ATVC::BroadcastTilingData`，它们的数据结构定义如下：
+`ATVC::Host::CalcBroadcastTiling`是ATVC在Host侧提供的针对Broadcast类算子的通用Tiling API，它以`ATVC::OpTraits`作为模板参数，根据实际输入输出Shape计算出对应算子模板需要的静态编译参数`ATVC::BroadcastPolicy`<br>和动态参数`ATVC::BroadcastParam`，其中`ATVC::BroadcastParam`包含了数据计算搬运的`ATVC::BroadcastOpTilingData`，它们的数据结构定义如下：
 
 ```cpp
 //指导Broadcast算子模板内部的数据调度
@@ -1017,7 +1017,7 @@ void BroadcastOpAdapter(uint8_t* x, uint8_t* y, uint8_t* z, ATVC::BroadcastParam
 template <class OpTraits>
 void BroadcastOpAdapter(uint8_t* x, uint8_t* y, ATVC::BroadcastParam &param, ATVC::BroadcastPolicy &policy, aclrtStream& stream)
 {
-    // 申请临时空间workspace，并将其与BroadcastTilingData一同传到Device侧
+    // 申请临时空间workspace，并将其与BroadcastOpTilingData一同传到Device侧
     uint8_t *paramDevice;
     uint8_t *workspaceDevice;
     CHECK_ACL(aclrtMalloc((void **)&workspaceDevice, param.workspaceSize, ACL_MEM_MALLOC_HUGE_FIRST));
@@ -1059,7 +1059,7 @@ int32_t main(int32_t argc, char* argv[])
 ```
 ### Broadcast模板说明
 `ATVC::Kernel::BroadcastOpTemplate`是一套基本的Broadcast算子类，它实现了一套算子数据的搬运搬出、资源分配和释放的流程。Kernel层的算子模板需要计算模板类作为模板参数传入来完成实例化。在调用阶段，Broadcast算子模板将按照固定参数顺序调用计算模板类的`Compute`接口，完成数据的计算。
-与Broadcast算子模板类似，Broadcast算子模板内置了不同场景的Broadcast实现，并在编译时通过`ATVC::BroadcastPolicy`类型的结构体来实现实例化。Broadcast算子模板内部将根据模板参数决定数据将由哪类具体的模板实例计算。`ATVC::BroadcastPolicy`的数据定义如下：
+与Reduce算子模板类似，Broadcast算子模板内置了不同场景的Broadcast实现，并在编译时通过`ATVC::BroadcastPolicy`类型的结构体来实现实例化。Broadcast算子模板内部将根据模板参数决定数据将由哪类具体的模板实例计算。`ATVC::BroadcastPolicy`的数据定义如下：
 
 ```cpp
 struct BroadcastPolicy {
@@ -1150,7 +1150,7 @@ ATVC框架支持Broadcast与Elementwise组合的算子通过扩展BroadcastOpTem
 
 4.定义Kernel层算子入口API， 内部实例化计算模板类。
 
-下面将以Add算子（Broadcast + Elementwise, 为区别Add单算字，命名为AddWithBroadcast算子）搭建为样例，按照组装顺序介绍组合算子类的开发流程。
+下面将以Add算子（Broadcast + Elementwise, 为区别Add单算子，命名为AddWithBroadcast算子）搭建为样例，按照组装顺序介绍组合算子类的开发流程。
 
 ### 组合算子开发步骤
 下面是用户利用Components模板实现自定义算子所需要实现的关键步骤，完整样例见[add_with_broadcast](../examples/add_with_broadcast/add_with_broadcast.cpp) :
@@ -1286,11 +1286,11 @@ __global__ __aicore__ void AddWithBroadcastCustom(GM_ADDR x,
 }
 ```
 
-在组合算子中，用户定义的`OpTraits`为组合算子的整体定义，核函数内部根据算子的组合形式，用组合算子的`OpTraits`定义来表达Elementwise和Broadcast算子的`Optraits`定义。例如，Broadcast计算函数的`OpTraits`定义就表示：Broadcast的输入是组合算子的第一个输入，Broadcast算子的输出组合算子的临时资源。
+在组合算子中，用户定义的`OpTraits`为组合算子的整体定义，核函数内部根据算子的组合形式，用组合算子的`OpTraits`定义来表达Elementwise和Broadcast算子的`OpTraits`定义。例如，Broadcast计算函数的`OpTraits`定义就表示：Broadcast的输入是组合算子的第一个输入，Broadcast算子的输出是组合算子的临时资源。
 
 #### Policy与Param的计算与传递
 ##### CalcBroadcastTiling
-组合类算子的TilingAPI可以复用`ATVC::Host::CalcBroadcastTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`OpTraits`。具体信息参考[CalcBroadcastTiling](#calcbroadcasttiling)章节。在计算基本快所需UB空间时，从`PreCompute`和`PostCompute`的`Optraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`Optraits`来计算Tiling，不需要分别传单算子的`Optraits`。
+组合类算子的TilingAPI可以复用`ATVC::Host::CalcBroadcastTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`OpTraits`。具体信息参考[CalcBroadcastTiling](#calcbroadcasttiling)章节。在计算基本块所需UB空间时，从`PreCompute`和`PostCompute`的`OpTraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`OpTraits`来计算Tiling，不需要分别传单算子的`OpTraits`。
 
 ```cpp
 // AddWithBroadcast算子的描述：两个输入，一个输出，类型均为float
@@ -1395,7 +1395,7 @@ int32_t main(int32_t argc, char* argv[])
 {
     ...
     ATVC::ReduceParam param;    // Reduce运行态参数，包含TilingData以及临时空间的相关信息
-    ATVC::ReducePolicy policy = {-1, -1, -1};  // Broadcast运行态参数，负责映射最适合的Broadcast模板实现
+    ATVC::ReducePolicy policy = {-1, -1, -1};  // Reduce运行态参数，负责映射最适合的Reduce模板实现
     // Host侧调用Tiling API完成相关运行态参数的运算
     param.nBufferNum = 1;
     if (!ATVC::Host::CalcReduceTiling<ReduceOpTraits>(shapeIn, dim, &policy, &param)) {
@@ -1468,7 +1468,7 @@ struct PostComputeReluOfReduceSum {
 
 Elementwise计算模板需要定义三个接口， 分别为：
 
-1、`SetScalar`前置或后置Elementwise计算模板除了需要满足基本计算模板的要求外，还需要定义两个额外接口`SetArgs`和`SetParam`，分别用来接受组合算子的向量参数和标量参数。`SetScalar`函数传递给每一个计算函数模板。
+1、`SetScalar`函数，入参为可变参数，用户调用Kernel函数传递的scaler参数经过Reduce模板的分拣，会通过`SetScalar`函数传递给每一个计算函数模板。
 
 2、`SetArgs`函数，入参为可变参数，用户调用Kernel函数传递的向量参数经过Reduce模板的分拣，会根据`OpTraits`计算每个计算模板需要的参数个数，并通过`SetArgs`函数按顺序传递给对应的计算模板。
 
@@ -1534,11 +1534,11 @@ __global__ __aicore__ void ReluWithReduceSum(GM_ADDR x, GM_ADDR y, ATVC::ReduceP
     op.Run(x, y, &reduceParam);
 }
 ```
-在组合算子中，用户定义的`OpTraits`为组合算子的整体定义，核函数内部根据算子的组合形式，用组合算子的`OpTraits`定义来表达Elementwise和Reduce算子的`Optraits`定义。例如，Reduce计算函数的`OpTraits`定义就表示：Reduce的输入是组合算子的第一个输入，Reduce算子的输出组合算子的临时资源。
+在组合算子中，用户定义的`OpTraits`为组合算子的整体定义，核函数内部根据算子的组合形式，用组合算子的`OpTraits`定义来表达Elementwise和Reduce算子的`OpTraits`定义。例如，Reduce计算函数的`OpTraits`定义就表示：Reduce的输入是组合算子的第一个输入，Reduce算子的输出是组合算子的临时资源。
 
 #### Policy与Param的计算与传递
 ##### CalcReduceTiling
-组合类算子的TilingAPI可以复用`ATVC::Host::CalcReduceTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`Optraits`。具体信息参考[CalcReduceTiling](#calcreducetiling)章节。在计算基本快所需UB空间时，从`PreCompute`和`PostCompute`的`Optraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`Optraits`来计算Tiling，不需要分别传单算子的`Optraits`。
+组合类算子的TilingAPI可以复用`ATVC::Host::CalcReduceTiling`功能，在此框架上引入`PreCompute`和`PostCompute`对应的`OpTraits`。具体信息参考[CalcReduceTiling](#calcreducetiling)章节。在计算基本块所需UB空间时，从`PreCompute`和`PostCompute`的`OpTraits`萃取对于UB空间的需求，确保不会出现溢出的情况。简单的，如果用户不用对Tiling做扩展，可以直接用组合算子的`OpTraits`来计算Tiling，不需要分别传单算子的`OpTraits`。
 
 ```cpp
 // ReluWithReduceSum算子的描述：一个输入，一个输出，类型均为float
@@ -1631,7 +1631,7 @@ ATVC框架提供的Pool算子模块之间的交互与ElementWise模板类似，�
 
 
 ### Pool算子开发步骤
-下面将以Edge算子的实现为样例，按照组成Kernel的顺序介绍Pool算子开发的关键步骤进行介绍。通过ATVC框架实现的Edge完整算子样例代码见[样例代码](../examples/edge/edge.cpp)：
+下面将以Edge算子的实现为样例，按照组成Kernel的顺序介绍Pool算子开发的关键步骤。通过ATVC框架实现的Edge完整算子样例代码见[样例代码](../examples/edge/edge.cpp)：
 ```cpp
 // 描述算子的输入输出以及临时计算资源
 using PoolOpTraits = ATVC::OpTraits<ATVC::OpInputs<float>, ATVC::OpOutputs<float>, ATVC::OpTemps<int32_t>>;
@@ -1642,7 +1642,7 @@ struct Edge2C3ComputeFunc {
     static constexpr ATVC::PoolTilePadding TILE_PADDING{
         8, 8, 1, 1};  // tile块上下左右padding的设置left/right需要32B对齐 未裁剪前基础值
     /*
-    函数说明： c = a + b
+    函数说明： c = edge(a)，对输入图像做边缘检测
     参数说明：
         a                   : 参与运算的输入
         c                   : 参与运算的输出
@@ -1672,7 +1672,7 @@ struct Edge2C3ComputeFunc {
         AscendC::Relu(temp, temp, 1);
         AscendC::PipeBarrier<PIPE_V>();
         AscendC::Gather(c, a, tempRef, 0, calcSize - 2);
-        // 计算: x[4]: min(abs((x[1] + x[4] + x[7] / 3), 255)
+        // 计算: x[4]: min(abs((x[1] + x[4] + x[7]) / 3), 255)
         AscendC::Add(a[TENSOR_WIDTH], c, c[TENSOR_WIDTH * 2], calcSize - TENSOR_WIDTH * 2);
         AscendC::PipeBarrier<PIPE_V>();
         AscendC::Add(c, a, c, calcSize);
@@ -1718,7 +1718,7 @@ struct Edge2C3ComputeFunc {
     static constexpr ATVC::PoolTilePadding TILE_PADDING{
         8, 8, 1, 1};  // tile块上下左右padding的设置left/right需要32B对齐 未裁剪前基础值
     /*
-    函数说明： c = a + b
+    函数说明： c = edge(a)，对输入图像做边缘检测
     参数说明：
         a                   : 参与运算的输入
         c                   : 参与运算的输出
@@ -1748,7 +1748,7 @@ struct Edge2C3ComputeFunc {
         AscendC::Relu(temp, temp, 1);
         AscendC::PipeBarrier<PIPE_V>();
         AscendC::Gather(c, a, tempRef, 0, calcSize - 2);
-        // 计算: x[4]: min(abs((x[1] + x[4] + x[7] / 3), 255)
+        // 计算: x[4]: min(abs((x[1] + x[4] + x[7]) / 3), 255)
         AscendC::Add(a[TENSOR_WIDTH], c, c[TENSOR_WIDTH * 2], calcSize - TENSOR_WIDTH * 2);
         AscendC::PipeBarrier<PIPE_V>();
         AscendC::Add(c, a, c, calcSize);
@@ -1763,7 +1763,7 @@ struct Edge2C3ComputeFunc {
 ```
 计算模板类将在数据计算阶段被算子模板调用，因此计算模板类定义必须遵从以下约束：
 1. 该模板类在实例化时固定传入`ATVC::OpTraits`类型的结构体作为模板参数，如 `ATVC::OpTraits<ATVC::OpInputs<float, float>,ATVC::OpOutputs<float>, ATVC::OpTemps<float, float>>`。
-2. 开发必须完成公有仿函数`__aicore__ inline void operator()`的重载。`ATVC::Kernel::EleWiseOpTemplate`将在计算阶段调用仿函数完成计算。
+2. 开发必须完成公有仿函数`__aicore__ inline void operator()`的重载。`ATVC::Kernel::PoolOpTemplate`将在计算阶段调用仿函数完成计算。
 3. 开发定义的`operator()`仿函数的输入参数类型支持`AscendC::LocalTensor<T>`以及C++其他基础数据类型。形式参数需按照`ATVC::OpInputs<>`,`ATVC::OpOutputs<>`, `ATVC::OpTemps<>`声明的顺序填入，其他标量参数放在最后，根据用户计算场景按需传入。
 4. `struct Edge2C3ComputeFunc`计算函数类中必须设置`TILE_LAYOUT`和`TILE_PADDING`, 用来表示计算时的基本块元素大小和计算时需要的上下左右外扩元素个数。
 - `TILE_LAYOUT`和`TILE_PADDING`设置方式如下所示：
@@ -1840,7 +1840,7 @@ struct PoolParam {
 ```cpp
     ATVC::PoolParam param;
     if (!ATVC::Host::CalcPoolTiling<PoolOpTraits>(totalLayout, Edge2C3ComputeFunc<PoolOpTraits>::TILE_LAYOUT, param)) {
-        (void)printf("[ERROR]: Calculate Element wise tiling Failed.\n");
+        (void)printf("[ERROR]: Calculate Pool tiling Failed.\n");
         return -1;
     };
 ```
@@ -2016,7 +2016,7 @@ bool CalcEleWiseTiling(int32_t totalCnt, ATVC::EleWiseParam &param,
     ATVC::EleWiseParam param;
     ATVC::Host::EleWiseTilingHyperParam hyperParam;
     hyperParam.singleCoreBaseLine = 1024;
-    if (!ATVC::Host::CalcEleWiseTiling<AddOpTraits>(eleNum, param, hyperParam=hyperParam)) {
+    if (!ATVC::Host::CalcEleWiseTiling<AddOpTraits>(eleNum, param, hyperParam)) {
         printf("[ERROR]: Calculate eleWise tiling failed.\n");
         return -1;
     };

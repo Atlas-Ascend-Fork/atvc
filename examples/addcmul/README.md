@@ -20,7 +20,7 @@
 算子规格：
 
 <table>
-<tr><td rowspan="1" align="center">算子类型(OpType)</td><td colspan="4" align="center">Add</td></tr>
+<tr><td rowspan="1" align="center">算子类型(OpType)</td><td colspan="4" align="center">Addcmul</td></tr>
 
 <tr><td rowspan="5" align="center">算子输入</td></tr>
 <tr><td align="center">name</td><td align="center">shape</td><td align="center">data type</td><td align="center">format</td></tr>
@@ -42,7 +42,7 @@
 | [addcmul.cpp](./addcmul.cpp) | Addcmul算子代码实现以及调用样例               |
 | [addcmul.h](./addcmul.h) |      Addcmul算子代码实现头文件      |
 | [post_compute_add_of_broadcast.h](./post_compute_add_of_broadcast.h) |        后置Elementwise计算        |
-| [pre_compute_mul_of_broadcast.h)](./pre_compute_mul_of_broadcast.h) |        前置Elementwise计算        |
+| [pre_compute_mul_of_broadcast.h](./pre_compute_mul_of_broadcast.h) |        前置Elementwise计算        |
 
 
 ## 算子运行

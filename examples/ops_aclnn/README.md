@@ -113,7 +113,7 @@ ops_aclnn/
       ATVC::BroadcastPolicy policy = {-1, -1, -1};
       // 根据不同数据类型使用不同的算子描述
       if (context->GetInputDesc(0)->GetDataType() == ge::DataType::DT_FLOAT) {
-        // BroadcastOpTraitsFloat为Reduce算子描述原型，根据算子输入shape和dim计算出Tiling数据后填入tiling中
+        // BroadcastOpTraitsFloat为Broadcast算子描述原型，根据算子输入/输出shape计算出Tiling数据后填入tiling中
         (void)ATVC::Host::CalcBroadcastTiling<BroadcastOpTraitsFloat>(shapeIn, shapeOut, &policy, tiling);
       } else if (context->GetInputDesc(0)->GetDataType() == ge::DataType::DT_INT32) {
         (void)ATVC::Host::CalcBroadcastTiling<BroadcastOpTraitsInt>(shapeIn, shapeOut, &policy, tiling);
@@ -219,8 +219,8 @@ ops_aclnn/
         // broadcast有不同的policy，在host与tilingkey进行绑定，此处的调用使用TILING_KEY_IS进行判断，和host的文件SetTilingKey相对应
         if (TILING_KEY_IS(0)) {
           auto op = ATVC::Kernel::BroadcastOpTemplate<ATVC::BroadcastCompute<BroadcastOpTraits>, ATVC::BROADCAST_POLICY0>();
-          ATVC::BroadcastParam param = &tilingData;
-          op.Run(x, y, &param);
+          ATVC::BroadcastParam *param = &tilingData;
+          op.Run(x, y, param);
         }else{
           ...
         }
@@ -269,7 +269,7 @@ ops_aclnn/
   # 例如 source /usr/local/Ascend/latest/bin/setenv.bash
   ```
   其中ASCEND_INSTALL_PATH为CANN软件包安装路径，一般和上一步中指定的路径保持一致。  
-- 在自定义算子安装包所在路径下，执行如下命令安装自定义算子包。命令执行成功后，自定义算子包中的相关文件将部署至opp算子库环境变量ASCEND_OPP_PATH指向的的vendors/customize目录中。
+- 在自定义算子安装包所在路径下，执行如下命令安装自定义算子包。命令执行成功后，自定义算子包中的相关文件将部署至opp算子库环境变量ASCEND_OPP_PATH指向的vendors/customize目录中。
 
   ```bash
   cd build_out

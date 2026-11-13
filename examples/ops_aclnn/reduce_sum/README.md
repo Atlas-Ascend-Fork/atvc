@@ -6,7 +6,7 @@
 ## 目录结构介绍
 ```
 ├── reduce_sum                 // 使用框架调用的方式调用ReduceSum算子
-│   ├── AclNNInvocation        // 通过aclnn调用的方式调用ReduceSumCustom算子
+│   ├── AclNNInvocationNaive   // 通过aclnn调用的方式调用ReduceSumCustom算子
 │   ├── ReduceSumCustom        // ReduceSumCustom算子工程
 │   ├── ReduceSumCustom.json   // ReduceSumCustom算子的原型定义json文件
 │   └── install.sh             // 脚本，调用msOpGen生成自定义算子工程，并编译
@@ -97,7 +97,7 @@ CANN软件包中提供了工程创建工具msOpGen，ReduceSumCustom算子工程
     cd CustomOp/build_out
     ./custom_opp_<target os>_<target architecture>.run
     ```
-  命令执行成功后，自定义算子包中的相关文件将部署至opp算子库环境变量ASCEND_OPP_PATH指向的的vendors/customize目录中。
+  命令执行成功后，自定义算子包中的相关文件将部署至opp算子库环境变量ASCEND_OPP_PATH指向的vendors/customize目录中。
 
 ### 调用执行算子工程
 - [aclnn调用ReduceSumCustom算子工程](./AclNNInvocationNaive/README.md)

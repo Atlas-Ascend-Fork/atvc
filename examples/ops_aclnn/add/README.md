@@ -101,7 +101,7 @@ CANN软件包中提供了工程创建工具msOpGen，AddCustom算子工程可通
     cd CustomOp/build_out
     ./custom_opp_<target os>_<target architecture>.run
     ```
-  命令执行成功后，自定义算子包中的相关文件将部署至opp算子库环境变量ASCEND_OPP_PATH指向的的vendors/customize目录中。
+  命令执行成功后，自定义算子包中的相关文件将部署至opp算子库环境变量ASCEND_OPP_PATH指向的vendors/customize目录中。
 
 ### 调用执行算子工程
 - [aclnn调用AddCustom算子工程](./AclNNInvocationNaive/README.md)
