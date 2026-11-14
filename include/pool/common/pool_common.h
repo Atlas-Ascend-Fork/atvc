@@ -11,6 +11,13 @@
 #ifndef ATVC_POOL_COMMON_H
 #define ATVC_POOL_COMMON_H
 
+#if defined(__CCE__)
+#include "kernel_operator.h"
+#define ATVC_POOL_COMMON_AICORE __aicore__
+#else
+#define ATVC_POOL_COMMON_AICORE
+#endif
+
 namespace ATVC {
 struct Layout2Dim {
     uint32_t width;
@@ -42,7 +49,7 @@ struct PoolParam {
 };
 
 namespace Kernel {
-inline uint32_t GetPoolTileExtent(uint32_t offset, uint32_t total, uint32_t tile)
+ATVC_POOL_COMMON_AICORE inline uint32_t GetPoolTileExtent(uint32_t offset, uint32_t total, uint32_t tile)
 {
     if (offset >= total) {
         return 0;
@@ -52,5 +59,7 @@ inline uint32_t GetPoolTileExtent(uint32_t offset, uint32_t total, uint32_t tile
 }
 } // namespace Kernel
 } // namespace ATVC
+
+#undef ATVC_POOL_COMMON_AICORE
 
 #endif

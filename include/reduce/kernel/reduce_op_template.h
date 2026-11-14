@@ -325,13 +325,13 @@ public:
             AscendC::WaitFlag<AscendC::HardEvent::MTE3_MTE2>(copyId);
         }
         if (tailCnt > 0) {
-            AscendC::DataCopyExtParams copyInParams{1, tailCnt * sizeof(DataType), 0, 0, 0};
+            AscendC::DataCopyExtParams copyInParams{1, static_cast<uint32_t>(tailCnt * sizeof(DataType)), 0, 0, 0};
             AscendC::DataCopyPadExtParams<DataType> padParams{false, 0, 0, 0};
             AscendC::DataCopyPad(tmpLoc, input_[0][loopCnt], copyInParams, padParams);
             event_t copyId = static_cast<event_t>(GetTPipePtr()->FetchEventID<AscendC::HardEvent::MTE2_MTE3>());
             AscendC::SetFlag<AscendC::HardEvent::MTE2_MTE3>(copyId);
             AscendC::WaitFlag<AscendC::HardEvent::MTE2_MTE3>(copyId);
-            AscendC::DataCopyExtParams copyOutParams{1, tailCnt * sizeof(DataType), 0, 0, 0};
+            AscendC::DataCopyExtParams copyOutParams{1, static_cast<uint32_t>(tailCnt * sizeof(DataType)), 0, 0, 0};
             AscendC::DataCopyPad(output_[0][loopCnt], tmpLoc, copyOutParams);
         }
     }
