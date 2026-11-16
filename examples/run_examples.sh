@@ -12,7 +12,7 @@
 set -e
 
 CURRENT_DIR=$(
-    cd $(dirname ${BASH_SOURCE:-$0})
+    cd "$(dirname "${BASH_SOURCE:-$0}")"
     pwd
 )
 
@@ -24,7 +24,7 @@ else
 fi
 
 ATVC_HOME_DIR=$CURRENT_DIR/../
-TEST_CASE_LIST=$(ls $ATVC_HOME_DIR/examples | grep -v '^run_examples.sh$' | grep -v '^ops_*' | grep -v '^common*' | grep -v '^README*' | xargs)
+TEST_CASE_LIST=$(ls "$ATVC_HOME_DIR/examples" | grep -v '^run_examples.sh$' | grep -v '^ops_*' | grep -v '^common*' | grep -v '^README*' | xargs)
 if [ $# -lt 1 ]; then
     echo "This script requires an input as the test case name. Execution example: 'bash run_examples.sh [$TEST_CASE_LIST]'"
     exit 1
@@ -55,16 +55,16 @@ function compile_operator(){
             _ASCEND_INSTALL_PATH=/usr/local/Ascend/ascend-toolkit/latest
         fi
     fi
-    cd $ATVC_HOME_DIR/examples/$TEST_NAME
+    cd "$ATVC_HOME_DIR/examples/$TEST_NAME"
     if [ -z "$RUN_MODE" ]; then
         echo "Executing with npu mode"
-        bisheng -x asc --npu-arch=dav-2201 $TEST_NAME.cpp -o $TEST_NAME -I ${ATVC_HOME_DIR}/include -I ${CURRENT_DIR}/common -ltiling_api -lplatform -lm -ldl -L${_ASCEND_INSTALL_PATH}/lib64
+        bisheng -x asc --npu-arch=dav-2201 "$TEST_NAME.cpp" -o "$TEST_NAME" -I "${ATVC_HOME_DIR}/include" -I "${CURRENT_DIR}/common" -ltiling_api -lplatform -lm -ldl -L"${_ASCEND_INSTALL_PATH}/lib64"
     elif [ "$RUN_MODE" = "debug_print" ]; then
         echo "Executing with debug_print mode"
-        bisheng -x asc --npu-arch=dav-2201 $TEST_NAME.cpp -o $TEST_NAME -I ${ATVC_HOME_DIR}/include -I ${CURRENT_DIR}/common  -ltiling_api -lplatform -lm -ldl -L${_ASCEND_INSTALL_PATH}/lib64 -DATVC_DEBUG_MODE=1
+        bisheng -x asc --npu-arch=dav-2201 "$TEST_NAME.cpp" -o "$TEST_NAME" -I "${ATVC_HOME_DIR}/include" -I "${CURRENT_DIR}/common"  -ltiling_api -lplatform -lm -ldl -L"${_ASCEND_INSTALL_PATH}/lib64" -DATVC_DEBUG_MODE=1
     elif [ "$RUN_MODE" = "profiling" ]; then
         echo "Executing with profiling mode"
-        bisheng -x asc --npu-arch=dav-2201 $TEST_NAME.cpp -o $TEST_NAME -I ${ATVC_HOME_DIR}/include -I ${CURRENT_DIR}/common  -ltiling_api -lplatform -lm -ldl -L${_ASCEND_INSTALL_PATH}/lib64 -DATVC_DEBUG_MODE=2
+        bisheng -x asc --npu-arch=dav-2201 "$TEST_NAME.cpp" -o "$TEST_NAME" -I "${ATVC_HOME_DIR}/include" -I "${CURRENT_DIR}/common"  -ltiling_api -lplatform -lm -ldl -L"${_ASCEND_INSTALL_PATH}/lib64" -DATVC_DEBUG_MODE=2
     else
         echo "--npu-mode is an optional parameter and can be left unset. If set, the value must be debug_print or profiling."
         echo "Execution example: 'bash run_examples.sh $TEST_NAME --run-mode=debug_print'"
@@ -73,25 +73,25 @@ function compile_operator(){
 }
 
 if [[ " $TEST_CASE_LIST " == *" ${TEST_NAME} "* ]]; then
-    cd $ATVC_HOME_DIR/examples/$TEST_NAME
-    rm -rf ./$TEST_NAME
+    cd "$ATVC_HOME_DIR/examples/$TEST_NAME"
+    rm -rf "./$TEST_NAME"
     parse_run_mode "$@"
     compile_operator
-    if [ ! -f ./$TEST_NAME ]; then
+    if [ ! -f "./$TEST_NAME" ]; then
         echo "Error: Cannot find file ./${TEST_NAME} due to compilation error, please check error message."
         exit 1
     fi
     if [ "$RUN_MODE" = "profiling" ]; then
-        msprof --ai-core=on --ascendcl=on --runtime-api=on --task-time=on --application=$TEST_NAME --output=./
+        msprof --ai-core=on --ascendcl=on --runtime-api=on --task-time=on --application="$TEST_NAME" --output=./
     else
-        ./$TEST_NAME
+        "./$TEST_NAME"
     fi
     if [ $? -eq 0 ]; then
         echo "Sample ${TEST_NAME} passed!"
     else
         echo "Sample ${TEST_NAME} failed!"
     fi
-    cd ${ATVC_HOME_DIR}
+    cd "${ATVC_HOME_DIR}"
 else
     echo "Error: Cannot find '$TEST_NAME' in ${ATVC_HOME_DIR}examples. Execution example: 'bash run_examples.sh [$TEST_CASE_LIST]'"
     exit 1
