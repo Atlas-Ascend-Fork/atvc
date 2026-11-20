@@ -156,7 +156,7 @@ int32_t main(int32_t argc, char *argv[])
     CHECK_ACL(aclrtMemcpy(yHost, outputByteSize, yDevice, outputByteSize, ACL_MEMCPY_DEVICE_TO_HOST));
     std::vector<float> y(reinterpret_cast<float *>(yHost), reinterpret_cast<float *>(yHost) + outEleNum);
 
-    // destory Acl
+    // destroy Acl
     CleanUp(xDevice, yDevice, yHost);
     CleanACL(stream, context, deviceId);
 

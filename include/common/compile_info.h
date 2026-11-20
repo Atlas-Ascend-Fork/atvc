@@ -33,7 +33,7 @@ inline OpCompileInfo GetOpCompileInfo()
 {
     const auto& platformInfoMgr = platform_ascendc::PlatformAscendCManager::GetInstance();
     if (platformInfoMgr == nullptr) {
-        printf("[ERROR]: [ATVC][Common] Failed to retrieve platform infomation.\n");
+        printf("[ERROR]: [ATVC][Common] Failed to retrieve platform information.\n");
         return {0, 0, 0, 0};
     }
     auto soc = platformInfoMgr->GetSocVersion();

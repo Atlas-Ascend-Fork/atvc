@@ -41,20 +41,20 @@ bool DebugCheck() {
         }
     } else if constexpr (templateType == ATVC::TemplateType::REDUCE) {
         if constexpr (TypeListSize<Inputs>::VALUE != 1) { // 1: input number must be 1.
-            printf("[ERROR]: [ATVC][OpTraits] Input numer must be 1 in Reduce template.\n");
+            printf("[ERROR]: [ATVC][OpTraits] Input number must be 1 in Reduce template.\n");
             return false;
         }
         if constexpr (TypeListSize<Outputs>::VALUE != 1) { // 1: output number must be 1.
-            printf("[ERROR]: [ATVC][OpTraits] Output numer must be 1 in Reduce template.\n");
+            printf("[ERROR]: [ATVC][OpTraits] Output number must be 1 in Reduce template.\n");
             return false;
         }
     } else if constexpr (templateType == ATVC::TemplateType::BROADCAST) {
         if constexpr (TypeListSize<Inputs>::VALUE != 1) { // 1: input number must be 1.
-            printf("[ERROR]: [ATVC][OpTraits] Input numer must be 1 in broadcast template.\n");
+            printf("[ERROR]: [ATVC][OpTraits] Input number must be 1 in broadcast template.\n");
             return false;
         }
         if constexpr (TypeListSize<Outputs>::VALUE != 1) { // 1: input number must be 1.
-            printf("[ERROR]: [ATVC][OpTraits] Output numer must be 1 in broadcast template.\n");
+            printf("[ERROR]: [ATVC][OpTraits] Output number must be 1 in broadcast template.\n");
             return false;
         }
     }
