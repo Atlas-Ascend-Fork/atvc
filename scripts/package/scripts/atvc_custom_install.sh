@@ -96,7 +96,7 @@ create_stub_softlink() {
 }
 
 custom_install() {
-    if [ -z "$common_parse_dir/share/info/atvc" ]; then
+    if [ ! -d "${common_parse_dir}/share/info/atvc" ]; then
         log "ERROR" "ERR_NO:0x0001;ERR_DES:atvc directory is empty"
         exit 1
     fi
