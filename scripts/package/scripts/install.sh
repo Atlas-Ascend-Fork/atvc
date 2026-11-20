@@ -1048,7 +1048,7 @@ do
     -*)
         log "ERROR" "ERR_NO:0x0004;ERR_DES: Unsupported parameters : $1"
         param_usage
-        exit 0
+        exit 1
         ;;
     *)
         break
