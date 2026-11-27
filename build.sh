@@ -18,7 +18,7 @@ SUPPORTED_SHORT_OPTS="hj:vcu-:"
 
 # 所有支持的长选项
 SUPPORTED_LONG_OPTS=(
-  "help" "verbose" "pkg" "clean" "cann_3rd_lib_path" "utest" "noexec" "cov" "asan" "cann_3rd_lib_path"
+  "help" "verbose" "pkg" "clean" "cann_3rd_lib_path" "utest" "noexec" "cov" "asan"
   "run_example" "build-type"
 )
 
@@ -289,7 +289,13 @@ checkopts() {
         usage
         exit 0
         ;;
-      j) THREAD_NUM=$OPTARG ;;
+      j)
+        if [[ ! "$OPTARG" =~ ^[0-9]+$ ]] || [[ ${#OPTARG} -gt 10 ]] || (( 10#$OPTARG < 1 || 10#$OPTARG > 2147483647 )); then
+          echo "[ERROR] -j requires a positive integer, got: $OPTARG"
+          exit 1
+        fi
+        THREAD_NUM=$((10#$OPTARG))
+        ;;
       v) VERBOSE="VERBOSE=1" ;;
       u) ENABLE_TEST=TRUE ;;
       c)
@@ -306,10 +312,25 @@ checkopts() {
         cov) ENABLE_COVERAGE=TRUE ;;
         noexec) ENABLE_UT_EXEC=FALSE ;;
         pkg) ENABLE_PACKAGE=TRUE ;;
-        cann_3rd_lib_path=*) CANN_3RD_LIB_PATH="$(realpath "${OPTARG#*=}")" ;;
+        cann_3rd_lib_path=*)
+          if [[ -z "${OPTARG#*=}" ]]; then
+            echo "[ERROR] --cann_3rd_lib_path requires a non-empty value"
+            exit 1
+          fi
+          CANN_3RD_LIB_PATH="$(realpath -m -- "${OPTARG#*=}")"
+          ;;
         asan) ENABLE_ASAN=TRUE ;;
         run_example) ENABLE_RUN_EXAMPLE=TRUE ;;
-        build-type=*) BUILD_TYPE="${OPTARG#build-type=}" ;;
+        build-type=*)
+          BUILD_TYPE="${OPTARG#build-type=}"
+          case "$BUILD_TYPE" in
+            Release|Debug) ;;
+            *)
+              echo "[ERROR] --build-type only supports Release/Debug, got: $BUILD_TYPE"
+              exit 1
+              ;;
+          esac
+          ;;
         clean)
           clean_build
           clean_build_out
